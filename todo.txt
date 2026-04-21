@@ -1,4 +1,4 @@
 To-do list: 
 1. message sysytem
-2. mic sysytem
+2. pic sysytem
 3. video sysytem
