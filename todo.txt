@@ -2,3 +2,5 @@ To-do list:
 1. message sysytem
 2. pic sysytem
 3. video sysytem
+
+if error for commi changes: just git pull then commit chnages

@@ -1,5 +1,4 @@
 #include "../shared/utils.h"
-
 #include <arpa/inet.h>
 #include <chrono>
 #include <iostream>
@@ -8,11 +7,11 @@
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
+using namespace std;
 
 int connect_bot(const std::string& host, int port) 
 {
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(static_cast<uint16_t>(port));
@@ -26,14 +25,17 @@ int connect_bot(const std::string& host, int port)
     return fd;
 }
 
-void bot_pause() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+void bot_pause() 
+{
+    this_thread::sleep_for(std::chrono::milliseconds(150));
 }
 
-void bot(const std::string& name, const std::string& group) {
+void bot(const std::string& name, const std::string& group) 
+{
     int fd = connect_bot("127.0.0.1", 5555);
-    if (fd < 0) {
-        std::cerr << "Bot could not connect. Start groupchat_server first.\n";
+    if (fd < 0) 
+    {
+        cout << "Bot could not connect. Start groupchat_server first.\n";
         return;
     }
 
@@ -49,15 +51,16 @@ void bot(const std::string& name, const std::string& group) {
     utils::close_socket(fd);
 }
 
-int main() {
-    std::thread a(bot, "botA", "general");
-    std::thread b(bot, "botB", "general");
-    std::thread c(bot, "botC", "sports");
+int main() 
+{
+    thread a(bot, "botA", "general");
+    thread b(bot, "botB", "general");
+    thread c(bot, "botC", "sports");
 
     a.join();
     b.join();
     c.join();
 
-    std::cout << "Bot test finished. Check server output and logs/chat_log.txt.\n";
+    cout << "Bot test finished. Check server output and logs/chat_log.txt.\n";
     return 0;
 }
