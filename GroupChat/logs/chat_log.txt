@@ -1,0 +1,3 @@
+[2026-04-24 17:46:15] group=general sender=1 hello from botA
+[2026-04-24 17:46:15] group=general sender=2 hello from botB
+[2026-04-24 17:46:15] group=sports sender=3 hello from botC
