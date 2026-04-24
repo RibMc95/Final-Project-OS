@@ -1,0 +1,9 @@
+1. cd GroupChat
+2. In terminal 1 ./groupchat_server
+3. In terminal 2 ./groupchat_client
+4. / join "chatroom number"
+5. send messages
+6. In terminal 3 ./groupchat_client
+7. / join "chatroom number"
+8. send messages
+  
