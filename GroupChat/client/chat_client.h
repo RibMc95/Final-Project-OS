@@ -5,8 +5,7 @@
 #include <string>
 #include <thread>
 
-class ChatClient
-{
+class ChatClient {
 public:
     ChatClient(std::string host, int port);
     ~ChatClient();
@@ -16,6 +15,10 @@ public:
 
 private:
     void receive_loop();
+    void handle_server_text(const std::string& text);
+    void handle_audio_begin(const std::string& filename);
+    void handle_audio_chunk(const std::vector<char>& chunk);
+    void handle_audio_end();
 
     std::string host_;
     int port_;

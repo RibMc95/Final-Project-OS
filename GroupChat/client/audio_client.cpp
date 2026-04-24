@@ -1,71 +1,60 @@
-#include <cstdint>
-#include <cstring>
+#include "audio_client.h"
+#include "../shared/protocol.h"
+#include "../shared/utils.h"
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-// Returns true if the bytes look like a valid PCM WAV file.
-// Checks the RIFF/WAVE magic bytes only — does not validate the full header.
-bool is_valid_wav(const std::vector<unsigned char> &data)
-{
-    // Minimum WAV header is 44 bytes.
-    if (data.size() < 44)
-    {
-        return false;
+namespace {
+
+std::string basename_of(const std::string& path) {
+    std::size_t slash = path.find_last_of("/\\");
+    if (slash == std::string::npos) {
+        return path;
     }
-    // Bytes  0-3 : "RIFF" Bytes  8-11: "WAVE" 
-    return data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'A' && data[10] == 'V' && data[11] == 'E';
+    return path.substr(slash + 1);
 }
 
-// Reads a .wav file from disk into a byte vector.
-// Returns an empty vector on failure.
-std::vector<unsigned char> load_wav_file(const std::string &path)
-{
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file)
-    {
-        std::cout << "[audio] Cannot open: " << path << "\n";
-        return {};
-    }
+} // namespace
 
-    auto size = file.tellg();
-    if (size <= 0)
-    {
-        std::cout << "[audio] File is empty: " << path << "\n";
-        return {};
-    }
-
-    file.seekg(0);
-    std::vector<unsigned char> data(static_cast<std::size_t>(size));
-    file.read(reinterpret_cast<char *>(data.data()), size);
-
-    if (!is_valid_wav(data))
-    {
-        std::cout << "[audio] File does not appear to be a WAV: " << path << "\n";
-        return {};
-    }
-
-    return data;
-}
-
-// Saves received bytes to disk as a .wav file.
-// Returns true on success.
-bool save_wav_file(const std::string &path, const std::vector<unsigned char> &data)
-{
-    if (!is_valid_wav(data))
-    {
-        std::cout << "[audio] Received data is not a valid WAV file.\n";
+bool send_audio_file(int socket_fd, const std::string& file_path) {
+    std::ifstream audio(file_path, std::ios::binary);
+    if (!audio) {
+        std::cerr << "Could not open audio file: " << file_path << "\n";
         return false;
     }
 
-    std::ofstream out(path, std::ios::binary);
-    if (!out)
-    {
-        std::cout << "[audio] Cannot write: " << path << "\n";
+    std::string filename = protocol::safe_filename(basename_of(file_path));
+
+    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_BEGIN, filename)) {
+        std::cerr << "Could not send audio begin frame.\n";
         return false;
     }
 
-    out.write(reinterpret_cast<const char *>(data.data()),static_cast<std::streamsize>(data.size()));
-    return out.good();
+    std::vector<char> buffer(protocol::AUDIO_CHUNK_SIZE);
+    std::size_t total_bytes = 0;
+
+    while (audio) {
+        audio.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        std::streamsize count = audio.gcount();
+
+        if (count > 0) {
+            std::vector<char> chunk(buffer.begin(), buffer.begin() + count);
+            if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_CHUNK, chunk)) {
+                std::cerr << "Could not send audio chunk.\n";
+                return false;
+            }
+            total_bytes += static_cast<std::size_t>(count);
+        }
+    }
+
+    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_END, filename)) {
+        std::cerr << "Could not send audio end frame.\n";
+        return false;
+    }
+
+    std::cout << "Sent audio file '" << filename << "' (" << total_bytes << " bytes).\n";
+    return true;
 }

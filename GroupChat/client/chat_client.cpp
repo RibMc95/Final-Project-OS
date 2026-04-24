@@ -1,33 +1,32 @@
 #include "chat_client.h"
+#include "audio_client.h"
+#include "../shared/protocol.h"
 #include "../shared/utils.h"
+
 #include <arpa/inet.h>
-#include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <netinet/in.h>
-#include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-using namespace std;
 
-ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port) {}
+ChatClient::ChatClient(std::string host, int port)
+    : host_(std::move(host)), port_(port) {}
 
-ChatClient::~ChatClient()
-{
+ChatClient::~ChatClient() {
     running_ = false;
     utils::close_socket(socket_fd_);
-    if (receiver_.joinable())
-    {
+
+    if (receiver_.joinable()) {
         receiver_.join();
     }
 }
 
-bool ChatClient::connect_to_server()
-{
+bool ChatClient::connect_to_server() {
     socket_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_fd_ < 0)
-    {
-        cout << "Could not create socket.\n";
+    if (socket_fd_ < 0) {
+        std::cerr << "Could not create socket.\n";
         return false;
     }
 
@@ -35,15 +34,13 @@ bool ChatClient::connect_to_server()
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(static_cast<uint16_t>(port_));
 
-    if (::inet_pton(AF_INET, host_.c_str(), &server_address.sin_addr) <= 0)
-    {
-        cout << "Invalid address.\n";
+    if (::inet_pton(AF_INET, host_.c_str(), &server_address.sin_addr) <= 0) {
+        std::cerr << "Invalid address. Use something like 127.0.0.1\n";
         return false;
     }
 
-    if (::connect(socket_fd_, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) < 0)
-    {
-        cout << "Could not connect to server.\n";
+    if (::connect(socket_fd_, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address)) < 0) {
+        std::cerr << "Could not connect to server.\n";
         return false;
     }
 
@@ -52,27 +49,28 @@ bool ChatClient::connect_to_server()
     return true;
 }
 
-void ChatClient::run() // edit some commands can be handled client-side (like sending files)
-{
-    cout << "Type /join general to enter a group.\n";
-    cout << "Commands: /join <group>, /list, /leave, /quit, /sendfile <path.wav>\n";
+void ChatClient::run() {
+    std::cout << "Type /join general to enter a group.\n";
+    std::cout << "Commands: /join <group>, /list, /leave, /audio <file>, /quit\n";
+    std::cout << "Example: /audio samples/hello.wav\n";
 
-    string line;
-    while (running_ && getline(cin, line))
-    {
-        if (line.rfind("/sendfile ", 0) == 0)
-        {
-            send_wav_file(utils::trim(line.substr(10)));
+    std::string line;
+    while (running_ && std::getline(std::cin, line)) {
+        if (line.rfind("/audio ", 0) == 0) {
+            std::string path = utils::trim(line.substr(7));
+            if (path.empty()) {
+                std::cout << "Usage: /audio <path-to-audio-file>\n";
+                continue;
+            }
+            send_audio_file(socket_fd_, path);
             continue;
         }
 
-        if (!utils::send_line(socket_fd_, line))
-        {
+        if (!utils::send_text(socket_fd_, line)) {
             break;
         }
 
-        if (line == "/quit")
-        {
+        if (line == "/quit") {
             break;
         }
     }
@@ -80,97 +78,55 @@ void ChatClient::run() // edit some commands can be handled client-side (like se
     running_ = false;
 }
 
-void ChatClient::receive_loop() // continuously read lines from the server and print them to the console
-{
-    string line;
+void ChatClient::receive_loop() {
+    uint8_t type = 0;
+    std::vector<char> payload;
 
-    while (running_ && utils::recv_line(socket_fd_, line))
-    {
-        if (line.rfind("FILE ", 0) == 0)
-        {
-            receive_wav_file(line);
-            continue;
+    while (running_ && utils::recv_frame(socket_fd_, type, payload)) {
+        if (type == protocol::FRAME_SERVER_TEXT) {
+            handle_server_text(utils::bytes_to_string(payload));
+        } else if (type == protocol::FRAME_AUDIO_BEGIN) {
+            handle_audio_begin(utils::bytes_to_string(payload));
+        } else if (type == protocol::FRAME_AUDIO_CHUNK) {
+            handle_audio_chunk(payload);
+        } else if (type == protocol::FRAME_AUDIO_END) {
+            handle_audio_end();
         }
-        cout << line << endl;
     }
 
     running_ = false;
 }
 
-void ChatClient::send_wav_file(const std::string &path) // help user to send file
-{
-    ifstream file(path, ios::binary | ios::ate);
-    if (!file)
-    {
-        cout << "Cannot open file: " << path << "\n";
-        return;
-    }
-
-    auto raw_size = file.tellg();
-    if (raw_size <= 0)
-    {
-        cout << "File is empty or unreadable: " << path << "\n";
-        return;
-    }
-    auto size = static_cast<std::size_t>(raw_size);
-
-    file.seekg(0);
-    vector<unsigned char> data(size);
-    file.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(size));
-
-    // Use only the base filename (strip directories).
-    string filename = path;
-    auto slash = path.rfind('/');
-    if (slash != string::npos)
-    {
-        filename = path.substr(slash + 1);
-    }
-    auto backslash = filename.rfind('\\');
-    if (backslash != string::npos)
-        filename = filename.substr(backslash + 1);
-
-    string header = "/sendfile " + filename + " " + to_string(size);
-    if (!utils::send_line(socket_fd_, header))
-    {
-        cout << "Failed to send file header.\n";
-        return;
-    }
-    if (!utils::send_raw_bytes(socket_fd_, data))
-    {
-        cout << "Failed to send file data.\n";
-        return;
-    }
-    cout << "[you] Sending file: " << filename << " (" << size << " bytes)\n";
+void ChatClient::handle_server_text(const std::string& text) {
+    std::cout << text << std::endl;
 }
 
-void ChatClient::receive_wav_file(const std::string &header) // help user to receive file
-{
-    // Format: FILE <sender_id> <filename> <byte_count>
-    istringstream ss(header.substr(5)); // skip "FILE "
-    int sender_id = 0;
-    string filename;
-    size_t file_size = 0;
+void ChatClient::handle_audio_begin(const std::string& filename) {
+    std::filesystem::create_directories("downloads");
 
-    if (!(ss >> sender_id >> filename >> file_size))
-    {
-        cout << "[warn] Malformed FILE header: " << header << "\n";
+    incoming_audio_name_ = "downloads/received_" + protocol::safe_filename(filename);
+    incoming_audio_.close();
+    incoming_audio_.open(incoming_audio_name_, std::ios::binary);
+
+    if (!incoming_audio_) {
+        std::cerr << "Could not save incoming audio to " << incoming_audio_name_ << "\n";
+        incoming_audio_name_.clear();
         return;
     }
 
-    vector<unsigned char> data;
-    if (!utils::recv_n_bytes(socket_fd_, file_size, data))
-    {
-        cout << "[warn] Failed to receive file data from sender " << sender_id << ".\n";
-        return;
-    }
+    std::cout << "Receiving audio: " << incoming_audio_name_ << "\n";
+}
 
-    string out_path = "received_" + filename;
-    ofstream out(out_path, ios::binary);
-    if (!out)
-    {
-        cout << "[warn] Cannot save file: " << out_path << "\n";
-        return;
+void ChatClient::handle_audio_chunk(const std::vector<char>& chunk) {
+    if (incoming_audio_) {
+        incoming_audio_.write(chunk.data(), static_cast<std::streamsize>(chunk.size()));
     }
-    out.write(reinterpret_cast<const char *>(data.data()), static_cast<std::streamsize>(data.size()));
-    cout << "[Client " << sender_id << "] sent file '" << filename << "' (" << file_size << " bytes) -> saved as " << out_path << "\n";
+}
+
+void ChatClient::handle_audio_end() {
+    if (incoming_audio_) {
+        incoming_audio_.close();
+        std::cout << "Audio saved as " << incoming_audio_name_ << "\n";
+    }
+    incoming_audio_name_.clear();
 }
