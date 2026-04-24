@@ -1,95 +1,81 @@
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <queue>
-#include <condition_variable>
-#include <functional>
-#include <vector>
-class ThreadPool
-{
+#include "thread_pool.h"
 
-private:
-    std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
-    std::mutex queue_mutex;
-    std::condition_variable condition;
-    bool stop;
-public:
-    ThreadPool(size_t threads) : stop(false)
-    {
-
-        for (size_t i = 0; i < threads; ++i)
-        {
-            workers.emplace_back([this]
-                {
-                    while(true)
-                    {
-                        std::function<void()> task;
-
-                        {
-                            std::unique_lock<std::mutex> lock(queue_mutex);
-                            condition.wait(lock, [this] { return stop || !tasks.empty(); });
-                            if (stop && tasks.empty())
-                                return;
-                                task = std::move(tasks.front());
-                                tasks.pop();
-                        }
-
-                    task();
-                    } 
-                }
-            );
+ThreadPool::ThreadPool(std::size_t workers, ScheduleMode mode)
+    : mode_(mode) {
+    for (std::size_t i = 0; i < workers; ++i) {
+        workers_.emplace_back([this] { worker_loop(); });
     }
-    }
+}
 
-    ~ThreadPool()
+ThreadPool::~ThreadPool() {
+    stop();
+}
+
+void ThreadPool::submit(std::function<void()> work, std::size_t cost) {
     {
+        std::lock_guard<std::mutex> lock(mutex_);
+        Task task{std::move(work), cost, next_sequence_++};
 
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            stop = true;
+        if (mode_ == ScheduleMode::ShortestJobFirst) {
+            sjf_queue_.push(std::move(task));
+        } else {
+            rr_queue_.push(std::move(task));
         }
+    }
+    cv_.notify_one();
+}
 
-        condition.notify_all();
-        for (auto &worker : workers)
-        {
+void ThreadPool::stop() {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (stopping_) {
+            return;
+        }
+        stopping_ = true;
+    }
 
+    cv_.notify_all();
+
+    for (auto& worker : workers_) {
+        if (worker.joinable()) {
             worker.join();
         }
     }
-
-    void enqueue(std::function<void()> task)
-    {
-
-        {
-
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            tasks.push(std::move(task));
-        }
-
-        condition.notify_one();
-    }
-};
-
-void handle_client(int client_socket)
-{
-
-    std::cout << "Handling client " << client_socket << std::endl;
-
-    // Add chat logic here
 }
 
-int main()
-{
+bool ThreadPool::has_work() const {
+    return mode_ == ScheduleMode::ShortestJobFirst ? !sjf_queue_.empty() : !rr_queue_.empty();
+}
 
-    ThreadPool pool(4); // 4-thread pool
-
-    for (int i = 0; i < 10; ++i)
-    {
-
-        pool.enqueue([i]
-                     { handle_client(i); });
+Task ThreadPool::pop_task() {
+    if (mode_ == ScheduleMode::ShortestJobFirst) {
+        Task task = std::move(const_cast<Task&>(sjf_queue_.top()));
+        sjf_queue_.pop();
+        return task;
     }
 
-    return 0;
+    Task task = std::move(rr_queue_.front());
+    rr_queue_.pop();
+    return task;
+}
+
+void ThreadPool::worker_loop() {
+    while (true) {
+        Task task;
+
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            cv_.wait(lock, [this] { return stopping_ || has_work(); });
+
+            if (stopping_ && !has_work()) {
+                return;
+            }
+
+            task = pop_task();
+        }
+
+        if (task.work) {
+            task.work();
+        }
+    }
 }
