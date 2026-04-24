@@ -1,13 +1,20 @@
 #pragma once
 
+#include "protocol.h"
+
 #include <algorithm>
 #include <chrono>
+#include <cctype>
+#include <cstdint>
 #include <ctime>
+#include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <vector>
 
 namespace utils {
 
@@ -29,10 +36,9 @@ inline std::string now_string() {
     return out.str();
 }
 
-inline bool send_all(int fd, const std::string& data) {
-    const char* buffer = data.c_str();
+inline bool send_all(int fd, const void* data, std::size_t length) {
+    const char* buffer = static_cast<const char*>(data);
     std::size_t total = 0;
-    std::size_t length = data.size();
 
     while (total < length) {
         ssize_t sent = ::send(fd, buffer + total, length - total, 0);
@@ -44,28 +50,92 @@ inline bool send_all(int fd, const std::string& data) {
     return true;
 }
 
-inline bool send_line(int fd, const std::string& line) {
-    return send_all(fd, line + "\n");
-}
+inline bool recv_all(int fd, void* data, std::size_t length) {
+    char* buffer = static_cast<char*>(data);
+    std::size_t total = 0;
 
-inline bool recv_line(int fd, std::string& line) {
-    line.clear();
-    char ch = '\0';
-
-    while (line.size() < 1024) {
-        ssize_t received = ::recv(fd, &ch, 1, 0);
+    while (total < length) {
+        ssize_t received = ::recv(fd, buffer + total, length - total, 0);
         if (received <= 0) {
             return false;
         }
-        if (ch == '\n') {
-            return true;
-        }
-        if (ch != '\r') {
-            line.push_back(ch);
-        }
+        total += static_cast<std::size_t>(received);
+    }
+    return true;
+}
+
+inline uint32_t host_to_network_u32(uint32_t value) {
+    return ((value & 0x000000FFu) << 24) |
+           ((value & 0x0000FF00u) << 8)  |
+           ((value & 0x00FF0000u) >> 8)  |
+           ((value & 0xFF000000u) >> 24);
+}
+
+inline uint32_t network_to_host_u32(uint32_t value) {
+    return host_to_network_u32(value);
+}
+
+inline bool send_frame(int fd, uint8_t type, const std::vector<char>& payload) {
+    if (payload.size() > protocol::MAX_FRAME_SIZE) {
+        return false;
+    }
+
+    uint32_t network_length = host_to_network_u32(static_cast<uint32_t>(payload.size()));
+
+    if (!send_all(fd, &type, sizeof(type))) {
+        return false;
+    }
+    if (!send_all(fd, &network_length, sizeof(network_length))) {
+        return false;
+    }
+    if (!payload.empty() && !send_all(fd, payload.data(), payload.size())) {
+        return false;
     }
 
     return true;
+}
+
+inline bool send_frame(int fd, uint8_t type, const std::string& payload) {
+    std::vector<char> bytes(payload.begin(), payload.end());
+    return send_frame(fd, type, bytes);
+}
+
+inline bool recv_frame(int fd, uint8_t& type, std::vector<char>& payload) {
+    payload.clear();
+
+    if (!recv_all(fd, &type, sizeof(type))) {
+        return false;
+    }
+
+    uint32_t network_length = 0;
+    if (!recv_all(fd, &network_length, sizeof(network_length))) {
+        return false;
+    }
+
+    uint32_t length = network_to_host_u32(network_length);
+    if (length > protocol::MAX_FRAME_SIZE) {
+        std::cerr << "Frame too large. Closing connection.\n";
+        return false;
+    }
+
+    payload.resize(length);
+    if (length > 0 && !recv_all(fd, payload.data(), payload.size())) {
+        return false;
+    }
+
+    return true;
+}
+
+inline bool send_text(int fd, const std::string& text) {
+    return send_frame(fd, protocol::FRAME_TEXT, text);
+}
+
+inline bool send_server_text(int fd, const std::string& text) {
+    return send_frame(fd, protocol::FRAME_SERVER_TEXT, text);
+}
+
+inline std::string bytes_to_string(const std::vector<char>& bytes) {
+    return std::string(bytes.begin(), bytes.end());
 }
 
 inline void close_socket(int fd) {

@@ -1,39 +1,46 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 
 namespace protocol {
 
-// Simple text protocol used to keep the project readable.
-// Client -> Server:
-//   JOIN <group>
-//   LIST
-//   MSG <message text>
-//   QUIT
-//
-// Server -> Client:
-//   INFO <text>
-//   HISTORY <formatted old message>
-//   MSG <formatted live message>
-//   GROUPS <comma-separated group list>
-//   ERROR <text>
+// Framed protocol used by both client and server.
+// Every network message is:
+//   1 byte  = frame type
+//   4 bytes = payload size in network byte order
+//   N bytes = payload
+// This lets us send normal text and binary audio without mixing them up.
 
 constexpr int DEFAULT_PORT = 5555;
 constexpr std::size_t MAX_LINE = 1024;
 constexpr std::size_t HISTORY_LIMIT = 20;
+constexpr std::size_t AUDIO_CHUNK_SIZE = 4096;
+constexpr std::size_t MAX_FRAME_SIZE = 1024 * 1024; // 1 MB safety limit
 
-enum class ClientCommand {
-    Join,
-    List,
-    Message,
-    Quit,
-    Unknown
-};
+constexpr uint8_t FRAME_TEXT = 1;
+constexpr uint8_t FRAME_AUDIO_BEGIN = 2;
+constexpr uint8_t FRAME_AUDIO_CHUNK = 3;
+constexpr uint8_t FRAME_AUDIO_END = 4;
+constexpr uint8_t FRAME_SERVER_TEXT = 5;
 
-struct ParsedCommand {
-    ClientCommand type{ClientCommand::Unknown};
-    std::string payload;
-};
+inline std::string safe_filename(std::string name) {
+    if (name.empty()) {
+        return "audio.bin";
+    }
+
+    for (char& ch : name) {
+        bool ok = (ch >= 'a' && ch <= 'z') ||
+                  (ch >= 'A' && ch <= 'Z') ||
+                  (ch >= '0' && ch <= '9') ||
+                  ch == '.' || ch == '_' || ch == '-';
+        if (!ok) {
+            ch = '_';
+        }
+    }
+
+    return name;
+}
 
 } // namespace protocol
