@@ -17,7 +17,6 @@ private:
     void receive_loop();
     void send_wav_file(const std::string &path);  // help user to send file
     void receive_wav_file(const std::string &header); // help user to receive file
-
     std::string host_;
     int port_;
     int socket_fd_{-1};

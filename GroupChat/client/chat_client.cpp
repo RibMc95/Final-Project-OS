@@ -1,6 +1,5 @@
 #include "chat_client.h"
 #include "../shared/utils.h"
-
 #include <arpa/inet.h>
 #include <fstream>
 #include <iostream>
@@ -9,15 +8,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+using namespace std;
 
-ChatClient::ChatClient(std::string host, int port)
-    : host_(std::move(host)), port_(port) {}
+ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port) {}
 
 ChatClient::~ChatClient()
 {
     running_ = false;
     utils::close_socket(socket_fd_);
-
     if (receiver_.joinable())
     {
         receiver_.join();
@@ -29,7 +27,7 @@ bool ChatClient::connect_to_server()
     socket_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd_ < 0)
     {
-        std::cerr << "Could not create socket.\n";
+        cout << "Could not create socket.\n";
         return false;
     }
 
@@ -39,29 +37,28 @@ bool ChatClient::connect_to_server()
 
     if (::inet_pton(AF_INET, host_.c_str(), &server_address.sin_addr) <= 0)
     {
-        std::cerr << "Invalid address.\n";
+        cout << "Invalid address.\n";
         return false;
     }
 
     if (::connect(socket_fd_, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) < 0)
     {
-        std::cerr << "Could not connect to server.\n";
+        cout << "Could not connect to server.\n";
         return false;
     }
 
     running_ = true;
-    receiver_ = std::thread([this]
-                            { receive_loop(); });
+    receiver_ = std::thread([this] { receive_loop(); });
     return true;
 }
 
 void ChatClient::run() // edit some commands can be handled client-side (like sending files)
 {
-    std::cout << "Type /join general to enter a group.\n";
-    std::cout << "Commands: /join <group>, /list, /leave, /quit, /sendfile <path.wav>\n";
+    cout << "Type /join general to enter a group.\n";
+    cout << "Commands: /join <group>, /list, /leave, /quit, /sendfile <path.wav>\n";
 
-    std::string line;
-    while (running_ && std::getline(std::cin, line))
+    string line;
+    while (running_ && getline(cin, line))
     {
         if (line.rfind("/sendfile ", 0) == 0)
         {
@@ -85,7 +82,7 @@ void ChatClient::run() // edit some commands can be handled client-side (like se
 
 void ChatClient::receive_loop() // continuously read lines from the server and print them to the console
 {
-    std::string line;
+    string line;
 
     while (running_ && utils::recv_line(socket_fd_, line))
     {
@@ -94,7 +91,7 @@ void ChatClient::receive_loop() // continuously read lines from the server and p
             receive_wav_file(line);
             continue;
         }
-        std::cout << line << std::endl;
+        cout << line << endl;
     }
 
     running_ = false;
@@ -102,79 +99,79 @@ void ChatClient::receive_loop() // continuously read lines from the server and p
 
 void ChatClient::send_wav_file(const std::string &path) // help user to send file
 {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    ifstream file(path, ios::binary | ios::ate);
     if (!file)
     {
-        std::cerr << "Cannot open file: " << path << "\n";
+        cout << "Cannot open file: " << path << "\n";
         return;
     }
 
     auto raw_size = file.tellg();
     if (raw_size <= 0)
     {
-        std::cerr << "File is empty or unreadable: " << path << "\n";
+        cout << "File is empty or unreadable: " << path << "\n";
         return;
     }
     auto size = static_cast<std::size_t>(raw_size);
 
     file.seekg(0);
-    std::vector<unsigned char> data(size);
+    vector<unsigned char> data(size);
     file.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(size));
 
     // Use only the base filename (strip directories).
-    std::string filename = path;
+    string filename = path;
     auto slash = path.rfind('/');
-    if (slash != std::string::npos)
+    if (slash != string::npos)
+    {
         filename = path.substr(slash + 1);
+    }
     auto backslash = filename.rfind('\\');
-    if (backslash != std::string::npos)
+    if (backslash != string::npos)
         filename = filename.substr(backslash + 1);
 
-    std::string header = "/sendfile " + filename + " " + std::to_string(size);
+    string header = "/sendfile " + filename + " " + to_string(size);
     if (!utils::send_line(socket_fd_, header))
     {
-        std::cerr << "Failed to send file header.\n";
+        cout << "Failed to send file header.\n";
         return;
     }
     if (!utils::send_raw_bytes(socket_fd_, data))
     {
-        std::cerr << "Failed to send file data.\n";
+        cout << "Failed to send file data.\n";
         return;
     }
-    std::cout << "[you] Sending file: " << filename << " (" << size << " bytes)\n";
+    cout << "[you] Sending file: " << filename << " (" << size << " bytes)\n";
 }
 
 void ChatClient::receive_wav_file(const std::string &header) // help user to receive file
 {
     // Format: FILE <sender_id> <filename> <byte_count>
-    std::istringstream ss(header.substr(5)); // skip "FILE "
+    istringstream ss(header.substr(5)); // skip "FILE "
     int sender_id = 0;
-    std::string filename;
-    std::size_t file_size = 0;
+    string filename;
+    size_t file_size = 0;
 
     if (!(ss >> sender_id >> filename >> file_size))
     {
-        std::cerr << "[warn] Malformed FILE header: " << header << "\n";
+        cout << "[warn] Malformed FILE header: " << header << "\n";
         return;
     }
 
-    std::vector<unsigned char> data;
+    vector<unsigned char> data;
     if (!utils::recv_n_bytes(socket_fd_, file_size, data))
     {
-        std::cerr << "[warn] Failed to receive file data from sender " << sender_id << ".\n";
+        cout << "[warn] Failed to receive file data from sender " << sender_id << ".\n";
         return;
     }
 
-    std::string out_path = "received_" + filename;
-    std::ofstream out(out_path, std::ios::binary);
+    string out_path = "received_" + filename;
+    ofstream out(out_path, ios::binary);
     if (!out)
     {
-        std::cerr << "[warn] Cannot save file: " << out_path << "\n";
+        cout << "[warn] Cannot save file: " << out_path << "\n";
         return;
     }
-    out.write(reinterpret_cast<const char *>(data.data()),
-              static_cast<std::streamsize>(data.size()));
+    out.write(reinterpret_cast<const char *>(data.data()), static_cast<std::streamsize>(data.size()));
 
-    std::cout << "[Client " << sender_id << "] sent file '" << filename
-              << "' (" << file_size << " bytes) -> saved as " << out_path << "\n";
+    cout << "[Client " << sender_id << "] sent file '" << filename << "' (" << file_size << " bytes) -> saved as " << out_path << "\n";
 }
