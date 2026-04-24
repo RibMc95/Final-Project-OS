@@ -66,7 +66,6 @@ bool save_wav_file(const std::string &path, const std::vector<unsigned char> &da
         return false;
     }
 
-    out.write(reinterpret_cast<const char *>(data.data()),
-              static_cast<std::streamsize>(data.size()));
+    out.write(reinterpret_cast<const char *>(data.data()),static_cast<std::streamsize>(data.size()));
     return out.good();
 }
