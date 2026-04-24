@@ -7,23 +7,26 @@
 #include <string>
 #include <thread>
 #include <vector>
+using namespace std;
 
-enum class ScheduleMode {
+enum class ScheduleMode 
+{
     RoundRobin,
     ShortestJobFirst
 };
 
-struct Task {
+struct Task 
+{
     std::function<void()> work;
     std::size_t cost{0}; // SJF uses smaller message length first
     std::uint64_t sequence{0};
 };
 
-class ThreadPool {
+class ThreadPool 
+{
 public:
     ThreadPool(std::size_t workers, ScheduleMode mode);
     ~ThreadPool();
-
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
 
@@ -31,9 +34,12 @@ public:
     void stop();
 
 private:
-    struct SJFCompare {
-        bool operator()(const Task& a, const Task& b) const {
-            if (a.cost == b.cost) {
+    struct SJFCompare 
+    {
+        bool operator()(const Task& a, const Task& b) const 
+        {
+            if (a.cost == b.cost) 
+            {
                 return a.sequence > b.sequence;
             }
             return a.cost > b.cost;

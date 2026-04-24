@@ -1,21 +1,20 @@
 #include "group_manager.h"
 #include "../shared/utils.h"
-
 #include <fstream>
 #include <sstream>
+using namespace std;
 
-GroupManager::GroupManager(std::string log_file)
-    : log_file_(std::move(log_file)) {}
+GroupManager::GroupManager(std::string log_file) : log_file_(std::move(log_file)) {}
 
 void GroupManager::register_client(int client_fd, int client_id)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    lock_guard<mutex> lock(mutex_);
     client_ids_[client_fd] = client_id;
 }
 
 void GroupManager::remove_client(int client_fd)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    lock_guard<mutex> lock(mutex_);
 
     auto current = client_group_.find(client_fd);
     if (current != client_group_.end())
@@ -33,7 +32,7 @@ void GroupManager::remove_client(int client_fd)
 
 void GroupManager::join_group(int client_fd, const std::string &group_name)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    lock_guard<mutex> lock(mutex_);
 
     if (group_name.empty())
     {
@@ -50,14 +49,13 @@ void GroupManager::join_group(int client_fd, const std::string &group_name)
     Group &group = groups_[group_name];
     group.members.insert(client_fd);
     client_group_[client_fd] = group_name;
-
     utils::send_line(client_fd, "INFO Joined group '" + group_name + "'.");
     send_history_unlocked(client_fd, group);
 }
 
 void GroupManager::leave_current_group(int client_fd)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    lock_guard<mutex> lock(mutex_);
 
     auto current = client_group_.find(client_fd);
     if (current == client_group_.end())
@@ -73,9 +71,8 @@ void GroupManager::leave_current_group(int client_fd)
 
 void GroupManager::send_group_list(int client_fd)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    std::ostringstream out;
+    lock_guard<mutex> lock(mutex_);
+    ostringstream out;
     out << "GROUPS ";
     bool first = true;
 
@@ -103,7 +100,7 @@ void GroupManager::broadcast_message(int client_fd, const std::string &text)
     std::string formatted;
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        lock_guard<mutex> lock(mutex_);
 
         auto current = client_group_.find(client_fd);
         if (current == client_group_.end())
@@ -143,11 +140,8 @@ std::string GroupManager::format_message(int client_fd, const std::string &text)
         id = found_id->second;
     }
 
-    std::ostringstream out;
-    out << "[" << utils::now_string() << "] "
-        << "group=" << group << " "
-        << "sender=" << id << " "
-        << text;
+    ostringstream out;
+    out << "[" << utils::now_string() << "] " << "group=" << group << " " << "sender=" << id << " " << text;
     return out.str();
 }
 
@@ -183,8 +177,7 @@ void GroupManager::broadcast_file(int client_fd, const std::string &filename, co
     int sender_id = 0;
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-
+        lock_guard<mutex> lock(mutex_);
         auto cur = client_group_.find(client_fd);
         if (cur == client_group_.end())
         {

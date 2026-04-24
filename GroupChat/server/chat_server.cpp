@@ -1,7 +1,6 @@
 #include "chat_server.h"
 #include "../shared/protocol.h"
 #include "../shared/utils.h"
-
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
@@ -9,9 +8,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+using namespace std;
 
-ChatServer::ChatServer(int port, ScheduleMode mode, std::size_t worker_count)
-    : port_(port), groups_("logs/chat_log.txt"), pool_(worker_count, mode) {}
+ChatServer::ChatServer(int port, ScheduleMode mode, std::size_t worker_count) : port_(port), groups_("logs/chat_log.txt"), pool_(worker_count, mode) {}
 
 ChatServer::~ChatServer()
 {
@@ -35,7 +34,7 @@ bool ChatServer::start()
     server_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd_ < 0)
     {
-        std::cerr << "Could not create socket.\n";
+        cout << "Could not create socket.\n";
         return false;
     }
 
@@ -49,18 +48,18 @@ bool ChatServer::start()
 
     if (::bind(server_fd_, reinterpret_cast<sockaddr *>(&address), sizeof(address)) < 0)
     {
-        std::cerr << "Bind failed. Is the port already in use?\n";
+        cout << "Bind failed. Is the port already in use?\n";
         return false;
     }
 
     if (::listen(server_fd_, 16) < 0)
     {
-        std::cerr << "Listen failed.\n";
+        cout << "Listen failed.\n";
         return false;
     }
 
     running_ = true;
-    std::cout << "GroupChat server listening on port " << port_ << "\n";
+    cout << "GroupChat server listening on port " << port_ << "\n";
     accept_loop();
     return true;
 }
@@ -77,7 +76,7 @@ void ChatServer::accept_loop()
         {
             if (running_)
             {
-                std::cerr << "Accept failed.\n";
+                cout << "Accept failed.\n";
             }
             continue;
         }
@@ -193,7 +192,7 @@ void ChatServer::handle_sendfile(int client_fd, const std::string &header) // he
     std::vector<unsigned char> data;
     if (!utils::recv_n_bytes(client_fd, file_size, data))
     {
-        std::cerr << "handle_sendfile: failed to receive " << file_size << " bytes.\n";
+        cout << "handle_sendfile: failed to receive " << file_size << " bytes.\n";
         return;
     }
 
