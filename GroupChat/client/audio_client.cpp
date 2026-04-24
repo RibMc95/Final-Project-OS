@@ -14,8 +14,7 @@ bool is_valid_wav(const std::vector<unsigned char> &data)
     {
         return false;
     }
-    // Bytes  0-3 : "RIFF"
-    // Bytes  8-11: "WAVE"
+    // Bytes  0-3 : "RIFF" Bytes  8-11: "WAVE" 
     return data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'A' && data[10] == 'V' && data[11] == 'E';
 }
 
@@ -26,14 +25,14 @@ std::vector<unsigned char> load_wav_file(const std::string &path)
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file)
     {
-        std::cerr << "[audio] Cannot open: " << path << "\n";
+        std::cout << "[audio] Cannot open: " << path << "\n";
         return {};
     }
 
     auto size = file.tellg();
     if (size <= 0)
     {
-        std::cerr << "[audio] File is empty: " << path << "\n";
+        std::cout << "[audio] File is empty: " << path << "\n";
         return {};
     }
 
@@ -43,7 +42,7 @@ std::vector<unsigned char> load_wav_file(const std::string &path)
 
     if (!is_valid_wav(data))
     {
-        std::cerr << "[audio] File does not appear to be a WAV: " << path << "\n";
+        std::cout << "[audio] File does not appear to be a WAV: " << path << "\n";
         return {};
     }
 
@@ -56,14 +55,14 @@ bool save_wav_file(const std::string &path, const std::vector<unsigned char> &da
 {
     if (!is_valid_wav(data))
     {
-        std::cerr << "[audio] Received data is not a valid WAV file.\n";
+        std::cout << "[audio] Received data is not a valid WAV file.\n";
         return false;
     }
 
     std::ofstream out(path, std::ios::binary);
     if (!out)
     {
-        std::cerr << "[audio] Cannot write: " << path << "\n";
+        std::cout << "[audio] Cannot write: " << path << "\n";
         return false;
     }
 
