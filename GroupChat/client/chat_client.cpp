@@ -172,6 +172,5 @@ void ChatClient::receive_wav_file(const std::string &header) // help user to rec
         return;
     }
     out.write(reinterpret_cast<const char *>(data.data()), static_cast<std::streamsize>(data.size()));
-
     cout << "[Client " << sender_id << "] sent file '" << filename << "' (" << file_size << " bytes) -> saved as " << out_path << "\n";
 }
