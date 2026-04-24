@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/workspaces/Final-Project-OS/GroupChat/server/cache.cpp" "CMakeFiles/groupchat_server.dir/server/cache.cpp.o" "gcc" "CMakeFiles/groupchat_server.dir/server/cache.cpp.o.d"
   "/workspaces/Final-Project-OS/GroupChat/server/chat_server.cpp" "CMakeFiles/groupchat_server.dir/server/chat_server.cpp.o" "gcc" "CMakeFiles/groupchat_server.dir/server/chat_server.cpp.o.d"
   "/workspaces/Final-Project-OS/GroupChat/server/group_manager.cpp" "CMakeFiles/groupchat_server.dir/server/group_manager.cpp.o" "gcc" "CMakeFiles/groupchat_server.dir/server/group_manager.cpp.o.d"
   "/workspaces/Final-Project-OS/GroupChat/server/main.cpp" "CMakeFiles/groupchat_server.dir/server/main.cpp.o" "gcc" "CMakeFiles/groupchat_server.dir/server/main.cpp.o.d"

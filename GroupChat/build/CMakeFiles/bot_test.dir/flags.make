@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/workspaces/Final-Project-OS/GroupChat/shared
+CXX_INCLUDES = -I/workspaces/Final-Project-OS/GroupChat/shared -I/workspaces/Final-Project-OS/GroupChat/client -I/workspaces/Final-Project-OS/GroupChat/server
 
 CXX_FLAGS = -std=gnu++17
 

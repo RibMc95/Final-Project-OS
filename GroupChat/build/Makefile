@@ -227,6 +227,30 @@ client/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_client.dir/build.make CMakeFiles/groupchat_client.dir/client/main.cpp.s
 .PHONY : client/main.cpp.s
 
+server/cache.o: server/cache.cpp.o
+.PHONY : server/cache.o
+
+# target to build an object file
+server/cache.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_server.dir/build.make CMakeFiles/groupchat_server.dir/server/cache.cpp.o
+.PHONY : server/cache.cpp.o
+
+server/cache.i: server/cache.cpp.i
+.PHONY : server/cache.i
+
+# target to preprocess a source file
+server/cache.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_server.dir/build.make CMakeFiles/groupchat_server.dir/server/cache.cpp.i
+.PHONY : server/cache.cpp.i
+
+server/cache.s: server/cache.cpp.s
+.PHONY : server/cache.s
+
+# target to generate assembly for a file
+server/cache.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_server.dir/build.make CMakeFiles/groupchat_server.dir/server/cache.cpp.s
+.PHONY : server/cache.cpp.s
+
 server/chat_server.o: server/chat_server.cpp.o
 .PHONY : server/chat_server.o
 
@@ -367,6 +391,9 @@ help:
 	@echo "... client/main.o"
 	@echo "... client/main.i"
 	@echo "... client/main.s"
+	@echo "... server/cache.o"
+	@echo "... server/cache.i"
+	@echo "... server/cache.s"
 	@echo "... server/chat_server.o"
 	@echo "... server/chat_server.i"
 	@echo "... server/chat_server.s"
