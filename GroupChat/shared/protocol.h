@@ -6,18 +6,18 @@
 
 namespace protocol {
 
-// Framed protocol used by both client and server.
-// Every network message is:
-//   1 byte  = frame type
-//   4 bytes = payload size in network byte order
-//   N bytes = payload
-// This lets us send normal text and binary audio without mixing them up.
+// Every network message is sent as:
+// 1 byte  = frame type
+// 4 bytes = payload size
+// N bytes = payload data
+//
+// This lets the chat send both normal text and binary audio files.
 
 constexpr int DEFAULT_PORT = 5555;
 constexpr std::size_t MAX_LINE = 1024;
 constexpr std::size_t HISTORY_LIMIT = 20;
 constexpr std::size_t AUDIO_CHUNK_SIZE = 4096;
-constexpr std::size_t MAX_FRAME_SIZE = 1024 * 1024; // 1 MB safety limit
+constexpr std::size_t MAX_FRAME_SIZE = 1024 * 1024;
 
 constexpr uint8_t FRAME_TEXT = 1;
 constexpr uint8_t FRAME_AUDIO_BEGIN = 2;
@@ -35,6 +35,7 @@ inline std::string safe_filename(std::string name) {
                   (ch >= 'A' && ch <= 'Z') ||
                   (ch >= '0' && ch <= '9') ||
                   ch == '.' || ch == '_' || ch == '-';
+
         if (!ok) {
             ch = '_';
         }
