@@ -1,0 +1,5 @@
+/workspaces/Final-Project-OS/GroupChat/build/CMakeFiles/groupchat_server.dir
+/workspaces/Final-Project-OS/GroupChat/build/CMakeFiles/groupchat_client.dir
+/workspaces/Final-Project-OS/GroupChat/build/CMakeFiles/bot_test.dir
+/workspaces/Final-Project-OS/GroupChat/build/CMakeFiles/edit_cache.dir
+/workspaces/Final-Project-OS/GroupChat/build/CMakeFiles/rebuild_cache.dir
