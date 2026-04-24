@@ -4,25 +4,27 @@
 #include "thread_pool.h"
 
 #include <atomic>
+#include <string>
 #include <thread>
 #include <vector>
 
-class ChatServer
-{
+class ChatServer {
 public:
     ChatServer(int port, ScheduleMode mode, std::size_t worker_count = 4);
     ~ChatServer();
 
-    ChatServer(const ChatServer &) = delete;
-    ChatServer &operator=(const ChatServer &) = delete;
+    ChatServer(const ChatServer&) = delete;
+    ChatServer& operator=(const ChatServer&) = delete;
 
     bool start();
 
 private:
     void accept_loop();
     void client_read_loop(int client_fd, int client_id);
-    void handle_line(int client_fd, const std::string &line);
-    void handle_sendfile(int client_fd, const std::string &header); // help user to send file
+    void handle_text_line(int client_fd, const std::string& line);
+    void relay_audio_begin(int client_fd, const std::string& filename);
+    void relay_audio_chunk(int client_fd, const std::vector<char>& chunk);
+    void relay_audio_end(int client_fd, const std::string& filename);
 
     int port_;
     int server_fd_{-1};
