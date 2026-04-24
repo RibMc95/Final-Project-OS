@@ -9,7 +9,8 @@
 #include <thread>
 #include <unistd.h>
 
-int connect_bot(const std::string& host, int port) {
+int connect_bot(const std::string& host, int port) 
+{
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
 
     sockaddr_in address{};
@@ -17,7 +18,8 @@ int connect_bot(const std::string& host, int port) {
     address.sin_port = htons(static_cast<uint16_t>(port));
     inet_pton(AF_INET, host.c_str(), &address.sin_addr);
 
-    if (::connect(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
+    if (::connect(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) 
+    {
         return -1;
     }
 
