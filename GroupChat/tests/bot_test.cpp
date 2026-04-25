@@ -1,5 +1,4 @@
 #include "../shared/utils.h"
-
 #include <arpa/inet.h>
 #include <chrono>
 #include <iostream>
@@ -9,9 +8,9 @@
 #include <thread>
 #include <unistd.h>
 
-int connect_bot(const std::string& host, int port) {
+int connect_bot(const std::string& host, int port) 
+{
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(static_cast<uint16_t>(port));
