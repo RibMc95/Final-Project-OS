@@ -72,6 +72,7 @@ void ChatClient::run()
     cout << "  /list\n";
     cout << "  /leave\n";
     cout << "  /audio <file_path>\n";
+    cout << "  /video <file_path>\n";
     cout << "  /quit\n\n";
 
     std::string line;
@@ -102,7 +103,22 @@ void ChatClient::run()
             continue;
         }
 
-        if (!utils::send_text(socket_fd_, line)) 
+        if (line.rfind("/video ", 0) == 0) 
+        {
+            std::string path = utils::trim(line.substr(7));
+            if (path.empty()) 
+            {
+                cout << "Usage: /video <file_path>\n";
+                continue;
+            }
+
+            if (!send_video_file(socket_fd_, path)) 
+            {
+                cout << "ERROR: Could not send video file.\n";
+            }
+
+            continue;
+        }
         {
             cout << "Disconnected from server.\n";
             running_ = false;
@@ -139,6 +155,18 @@ void ChatClient::receive_loop()
             else if (type == protocol::FRAME_AUDIO_END) 
         {
             handle_audio_end();
+        } 
+            else if (type == protocol::FRAME_VIDEO_BEGIN) 
+        {
+            handle_video_begin(utils::bytes_to_string(payload));
+        } 
+            else if (type == protocol::FRAME_VIDEO_CHUNK) 
+        {
+            handle_video_chunk(payload);
+        } 
+            else if (type == protocol::FRAME_VIDEO_END) 
+        {
+            handle_video_end();
         } else {
             std::cout << "Received unknown frame type.\n";
         }
@@ -195,3 +223,49 @@ void ChatClient::handle_audio_end()
 
     }
 }
+
+void ChatClient::handle_video_begin(const std::string& filename) 
+{
+    incoming_video_name_ = "downloads/received_" + filename;
+
+    system("mkdir -p downloads");
+
+    if (incoming_video_.is_open()) 
+    {
+        incoming_video_.close();
+    }
+
+    incoming_video_.open(incoming_video_name_, std::ios::binary);
+
+    if (!incoming_video_) 
+    {
+        cout << "ERROR: Could not open file for incoming video: " << incoming_video_name_ << endl;
+        return;
+    }
+
+    cout << "Receiving video file: " << incoming_video_name_ << endl;
+}
+
+void ChatClient::handle_video_chunk(const std::vector<char>& chunk) 
+{
+    if (incoming_video_.is_open()) 
+    {
+        incoming_video_.write(chunk.data(), static_cast<std::streamsize>(chunk.size()));
+    }
+}
+
+void ChatClient::handle_video_end() 
+{
+    if (incoming_video_.is_open()) 
+    {
+        incoming_video_.close();
+        cout << "Video saved to: " << incoming_video_name_ << endl;
+    } 
+    else 
+    {
+        cout << "Video transfer ended, but no file was open.\n";
+
+    }
+}
+
+

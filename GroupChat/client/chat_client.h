@@ -29,4 +29,7 @@ private:
     void handle_audio_begin(const std::string& filename);
     void handle_audio_chunk(const std::vector<char>& chunk);
     void handle_audio_end();
+    void handle_video_begin(const std::string& filename);
+    void handle_video_chunk(const std::vector<char>& chunk);
+    void handle_video_end();
 };
