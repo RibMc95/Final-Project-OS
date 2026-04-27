@@ -11,11 +11,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-ChatClient::ChatClient(std::string host, int port)
-    : host_(std::move(host)), port_(port), socket_fd_(-1), running_(false) {
-}
+ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port), socket_fd_(-1), running_(false) {}
 
-ChatClient::~ChatClient() {
+ChatClient::~ChatClient() 
+{
     running_ = false;
 
     if (socket_fd_ >= 0) {
