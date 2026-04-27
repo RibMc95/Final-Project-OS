@@ -6,4 +6,4 @@
 6. In terminal 3  cd GroupChat then cd build ./groupchat_client
 7. / join "chatroom number"
 8. send messages
-  
+9. Sending audio is /audio ../sample/<file> Name
