@@ -1,7 +1,7 @@
 #include "chat_server.h"
-
 #include <iostream>
 #include <string>
+using namespace std;
 
 int main(int argc, char* argv[]) 
 {
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 
     if (argc >= 3) 
     {
-        std::string sched = argv[2];
+        string sched = argv[2];
         if (sched == "sjf") 
         {
             mode = ScheduleMode::ShortestJobFirst;
@@ -24,12 +24,12 @@ int main(int argc, char* argv[])
             mode = ScheduleMode::RoundRobin;
         } else 
         {
-            std::cerr << "Unknown scheduler. Use rr or sjf.\n";
+            cout << "Unknown scheduler. Use rr or sjf.\n";
             return 1;
         }
     }
 
-    std::cout << "Scheduler: " << (mode == ScheduleMode::ShortestJobFirst ? "SJF" : "Round Robin") << "\n";
+    cout << "Scheduler: " << (mode == ScheduleMode::ShortestJobFirst ? "SJF" : "Round Robin") << "\n";
     ChatServer server(port, mode, 4);
     return server.start() ? 0 : 1;
 }

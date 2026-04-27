@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-class MessageCache {
+class MessageCache 
+{
 public:
     explicit MessageCache(std::size_t capacity = 20)
         : capacity_(capacity) {}
