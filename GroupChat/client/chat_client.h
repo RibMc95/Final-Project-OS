@@ -5,8 +5,10 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <filesystem>
 
-class ChatClient {
+class ChatClient
+{
 public:
     ChatClient(std::string host, int port);
     ~ChatClient();
@@ -23,13 +25,16 @@ private:
 
     std::ofstream incoming_audio_;
     std::string incoming_audio_name_;
+    std::ofstream incoming_video_;
+    std::string incoming_video_name_;
 
     void receive_loop();
-    void handle_server_text(const std::string& text);
-    void handle_audio_begin(const std::string& filename);
-    void handle_audio_chunk(const std::vector<char>& chunk);
+    void handle_server_text(const std::string &text);
+    void handle_audio_begin(const std::string &filename);
+    void handle_audio_chunk(const std::vector<char> &chunk);
     void handle_audio_end();
-    void handle_video_begin(const std::string& filename);
-    void handle_video_chunk(const std::vector<char>& chunk);
+    void play_received_audio() const;
+    void handle_video_begin(const std::string &filename);
+    void handle_video_chunk(const std::vector<char> &chunk);
     void handle_video_end();
 };

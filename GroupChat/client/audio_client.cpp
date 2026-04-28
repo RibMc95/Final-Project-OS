@@ -5,6 +5,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <windows.h> // For PlaySoundA
+#include <mmsystem.h> // For PlaySoundA
+#pragma comment(lib, "winmm.lib") // Link with winmm.lib for PlaySoundA
 using namespace std;
 
 namespace 
@@ -68,3 +71,4 @@ bool send_audio_file(int socket_fd, const string& file_path) // Returns true on 
     cout << "Sent audio file '" << filename << "' (" << total_bytes << " bytes).\n";
     return true;
 }
+
