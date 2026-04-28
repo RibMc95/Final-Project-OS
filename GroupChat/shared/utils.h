@@ -167,7 +167,7 @@ inline void close_socket(int fd)
 {
     if (fd >= 0) 
     {
-        ::close(fd);
+        close(fd);
     }
 }
 
