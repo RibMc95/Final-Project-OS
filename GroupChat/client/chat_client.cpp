@@ -188,7 +188,7 @@ void ChatClient::receive_loop()
         }
         else
         {
-            cout << "Received unknown frame type.\n";
+            cout << "Received unknown frame type." << endl;
         }
     }
 
@@ -232,30 +232,30 @@ void ChatClient::handle_audio_end()
 {
     if (!incoming_audio_.is_open())
     {
-        cout << "Audio transfer ended, but no file was open.\n";
+        cout << "Audio transfer ended, but no file was open." << endl;
         return;
     }
 
     incoming_audio_.close();
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
-    cout << "Type /play to play the audio.\n";
+    cout << "Type /play to play the audio." << endl;
 }
 
 void ChatClient::play_received_audio() const
 {
     if (incoming_audio_name_.empty())
     {
-        cout << "No audio received yet.\n";
+        cout << "No audio received yet." << endl;
         return;
     }
 #ifdef _WIN32
-    cout << "Playing: " << incoming_audio_name_ << "\n";
+    cout << "Playing: " << incoming_audio_name_ << endl;
     if (!PlaySoundA(incoming_audio_name_.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
     {
-        cout << "Playback failed for: " << incoming_audio_name_ << ". PlaySoundA typically expects a WAV file.\n";
+        cout << "Playback failed for: " << incoming_audio_name_ << ". PlaySoundA typically expects a WAV file." << endl;
     }
 #else
-    cout << "Playback is only supported on Windows builds. File saved at: " << incoming_audio_name_ << "\n";
+    cout << "Playback is only supported on Windows builds. File saved at: " << incoming_audio_name_ << endl;
 #endif
 }
 
@@ -291,7 +291,7 @@ void ChatClient::handle_video_end()
 {
     if (!incoming_video_.is_open())
     {
-        cout << "Video transfer ended, but no file was open.\n";
+        cout << "Video transfer ended, but no file was open." << endl;
         return;
     }
 
