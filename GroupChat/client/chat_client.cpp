@@ -72,7 +72,8 @@ bool ChatClient::connect_to_server()
     }
 
     running_ = true;
-    receiver_ = std::thread([this](){ receive_loop(); });
+    receiver_ = std::thread([this]()
+                            { receive_loop(); });
     return true;
 }
 
@@ -85,6 +86,7 @@ void ChatClient::run()
     cout << "  /leave\n";
     cout << "  /audio <file_path>\n";
     cout << "  /video <file_path>\n";
+    cout << "  /play              (play the last received audio)\n";
     cout << "  /quit\n\n";
 
     std::string line;
@@ -125,6 +127,12 @@ void ChatClient::run()
             {
                 cout << "ERROR: Could not send video file.\n";
             }
+            continue;
+        }
+
+        if (line == "/play")
+        {
+            play_received_audio();
             continue;
         }
 
@@ -230,18 +238,24 @@ void ChatClient::handle_audio_end()
 
     incoming_audio_.close();
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
-    play_received_audio();
+    cout << "Type /play to play the audio.\n";
 }
 
 void ChatClient::play_received_audio() const
 {
+    if (incoming_audio_name_.empty())
+    {
+        cout << "No audio received yet.\n";
+        return;
+    }
 #ifdef _WIN32
+    cout << "Playing: " << incoming_audio_name_ << "\n";
     if (!PlaySoundA(incoming_audio_name_.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
     {
         cout << "Playback failed for: " << incoming_audio_name_ << ". PlaySoundA typically expects a WAV file.\n";
     }
 #else
-    cout << "Audio saved, but automatic playback is only enabled for Windows builds.\n";
+    cout << "Playback is only supported on Windows builds. File saved at: " << incoming_audio_name_ << "\n";
 #endif
 }
 
