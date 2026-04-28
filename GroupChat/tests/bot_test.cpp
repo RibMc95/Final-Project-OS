@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
+using namespace std;
 
 int connect_bot(const std::string& host, int port) 
 {
@@ -23,11 +24,13 @@ int connect_bot(const std::string& host, int port)
     return fd;
 }
 
-void bot_pause() {
+void bot_pause() 
+{
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
 }
 
-void drain_some_messages(int fd) {
+void drain_some_messages(int fd) 
+{
     fd_set set;
     timeval timeout{};
     timeout.tv_sec = 0;
@@ -43,7 +46,7 @@ void drain_some_messages(int fd) {
             return;
         }
         if (type == protocol::FRAME_SERVER_TEXT) {
-            std::cout << utils::bytes_to_string(payload) << "\n";
+            cout << utils::bytes_to_string(payload) << "\n";
         }
 
         FD_ZERO(&set);
@@ -53,10 +56,12 @@ void drain_some_messages(int fd) {
     }
 }
 
-void bot(const std::string& name, const std::string& group) {
+void bot(const std::string& name, const std::string& group) 
+{
     int fd = connect_bot("127.0.0.1", 5555);
-    if (fd < 0) {
-        std::cerr << "Bot could not connect. Start groupchat_server first.\n";
+    if (fd < 0) 
+    {
+        cout << "Bot could not connect. Start groupchat_server first.\n";
         return;
     }
 

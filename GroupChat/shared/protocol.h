@@ -4,7 +4,8 @@
 #include <cstddef>
 #include <string>
 
-namespace protocol {
+namespace protocol 
+{
 
 // Every network message is sent as:
 // 1 byte  = frame type
@@ -25,18 +26,18 @@ constexpr uint8_t FRAME_AUDIO_CHUNK = 3;
 constexpr uint8_t FRAME_AUDIO_END = 4;
 constexpr uint8_t FRAME_SERVER_TEXT = 5;
 
-inline std::string safe_filename(std::string name) {
-    if (name.empty()) {
+inline std::string safe_filename(std::string name) 
+{
+    if (name.empty()) 
+    {
         return "audio.bin";
     }
 
-    for (char& ch : name) {
-        bool ok = (ch >= 'a' && ch <= 'z') ||
-                  (ch >= 'A' && ch <= 'Z') ||
-                  (ch >= '0' && ch <= '9') ||
-                  ch == '.' || ch == '_' || ch == '-';
-
-        if (!ok) {
+    for (char& ch : name) 
+    {
+        bool ok = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-';
+        if (!ok) 
+        {
             ch = '_';
         }
     }

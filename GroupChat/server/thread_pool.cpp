@@ -1,9 +1,8 @@
 #include "thread_pool.h"
 
 
-ThreadPool::ThreadPool(std::size_t workers, ScheduleMode mode)
-    : mode_(mode) 
-    {
+ThreadPool::ThreadPool(std::size_t workers, ScheduleMode mode) : mode_(mode) 
+{
     for (std::size_t i = 0; i < workers; ++i) 
     {
         workers_.emplace_back([this] { worker_loop(); });
@@ -24,7 +23,8 @@ void ThreadPool::submit(std::function<void()> work, std::size_t cost)
         if (mode_ == ScheduleMode::ShortestJobFirst) 
         {
             sjf_queue_.push(std::move(task));
-        } else 
+        } 
+        else 
         {
             rr_queue_.push(std::move(task));
         }

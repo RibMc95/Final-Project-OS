@@ -25,6 +25,9 @@ private:
     void relay_audio_begin(int client_fd, const std::string& filename);
     void relay_audio_chunk(int client_fd, const std::vector<char>& chunk);
     void relay_audio_end(int client_fd, const std::string& filename);
+    void relay_video_begin(int client_fd, const std::string& filename);
+    void relay_video_chunk(int client_fd, const std::vector<char>& chunk);
+    void relay_video_end(int client_fd, const std::string& filename);
 
     int port_;
     int server_fd_{-1};
