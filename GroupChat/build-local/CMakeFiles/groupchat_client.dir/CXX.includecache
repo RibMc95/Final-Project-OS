@@ -59,13 +59,17 @@ utils.h
 /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/utils.h
 video_client.h
 /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.h
+windows.h
+-
+mmsystem.h
+-
 arpa/inet.h
 -
-filesystem
+cctype
 -
 cstdlib
 -
-cctype
+filesystem
 -
 iostream
 -
@@ -73,9 +77,13 @@ netdb.h
 -
 sstream
 -
+string
+-
 sys/socket.h
 -
 unistd.h
+-
+vector
 -
 
 /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.h
