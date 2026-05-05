@@ -4,6 +4,11 @@
 #include "utils.h"
 #include "video_client.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
 #include <arpa/inet.h>
 #include <filesystem>
 #include <cstdlib>
@@ -13,10 +18,6 @@
 #include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
-#ifdef _WIN32
-#include <mmsystem.h>
-#include <windows.h>
-#endif
 
 using namespace std;
 
@@ -40,32 +41,22 @@ namespace
         return quoted;
     }
 
-    string lower_ascii(std::string value)
-    {
-        for (char &ch : value)
-        {
-            ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-        }
-        return value;
-    }
-
+#ifdef _WIN32
     string quote_for_cmd(const std::string &path)
     {
         std::string quoted = "\"";
         for (char ch : path)
         {
             if (ch == '"')
-            {
                 quoted += "\"\"";
-            }
             else
-            {
                 quoted += ch;
-            }
         }
         quoted += "\"";
         return quoted;
     }
+#endif
+
 }
 
 ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port), socket_fd_(-1), running_(false) {}
@@ -327,68 +318,38 @@ void ChatClient::play_audio_file(const std::string &path) const
         return;
     }
 
+    const std::string abs_path = std::filesystem::absolute(path).string();
+
 #ifdef _WIN32
-    const std::string abs_path = std::filesystem::absolute(path).string();
-    const std::string ext = lower_ascii(std::filesystem::path(abs_path).extension().string());
+    // Use PlaySound for WAV files (winmm); fall back to default player for other formats.
+    std::string ext;
+    for (char c : std::filesystem::path(abs_path).extension().string())
+        ext += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 
-    if ((ext == ".wav" || ext == ".wave") && PlaySoundA(abs_path.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
+    if (ext == ".wav")
     {
-        cout << "Played via PlaySoundA: " << abs_path << endl;
-        return;
-    }
-
-    const std::string open_default = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
-    if (std::system(open_default.c_str()) == 0)
-    {
-        cout << "Opened in Windows media player: " << abs_path << endl;
-        return;
-    }
-
-    cout << "Playback failed for: " << path << ". Install or configure a default Windows media player." << endl;
-#else
-    const std::string abs_path = std::filesystem::absolute(path).string();
-    const std::string quoted_path = quote_for_shell(abs_path);
-
-    // In WSL, the Windows media player is usually more reliable than Linux audio sinks.
-    if (std::getenv("WSL_DISTRO_NAME") != nullptr)
-    {
-        const std::string wsl_fallback = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
-        if (std::system(wsl_fallback.c_str()) == 0)
-        {
-            cout << "Opened in Windows media player: " << abs_path << endl;
-            return;
-        }
-    }
-
-    const std::string ext = lower_ascii(std::filesystem::path(abs_path).extension().string());
-    std::vector<std::pair<std::string, std::string>> commands;
-    if (ext == ".wav" || ext == ".wave")
-    {
-        commands = {
-            {"ffplay", "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1"},
-            {"aplay", "aplay " + quoted_path + " >/dev/null 2>&1"},
-            {"paplay", "paplay " + quoted_path + " >/dev/null 2>&1"},
-            {"mpg123", "mpg123 " + quoted_path + " >/dev/null 2>&1"}};
+        if (PlaySoundA(abs_path.c_str(), NULL, SND_FILENAME | SND_ASYNC))
+            cout << "Playing: " << path << endl;
+        else
+            cout << "Playback failed for: " << path << ". Could not play WAV file." << endl;
     }
     else
     {
-        commands = {
-            {"ffplay", "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1"},
-            {"mpg123", "mpg123 " + quoted_path + " >/dev/null 2>&1"},
-            {"paplay", "paplay " + quoted_path + " >/dev/null 2>&1"},
-            {"aplay", "aplay " + quoted_path + " >/dev/null 2>&1"}};
+        const std::string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
+        if (std::system(open_cmd.c_str()) == 0)
+            cout << "Opened in Windows media player: " << path << endl;
+        else
+            cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
     }
+#else
+    // WSL: convert the Linux path to a Windows path then open with the Windows default media player.
+    const std::string quoted_path = quote_for_shell(abs_path);
+    const std::string open_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
 
-    for (const auto &candidate : commands)
-    {
-        if (std::system(candidate.second.c_str()) == 0)
-        {
-            cout << "Played via " << candidate.first << ": " << path << endl;
-            return;
-        }
-    }
-
-    cout << "Playback failed for: " << path << ". Install ffplay, aplay, paplay, or mpg123 in the terminal environment." << endl;
+    if (std::system(open_cmd.c_str()) == 0)
+        cout << "Opened in Windows media player: " << path << endl;
+    else
+        cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
 #endif
 }
 
