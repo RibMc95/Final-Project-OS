@@ -1,0 +1,5 @@
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/edit_cache.dir
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/bot_test.dir
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_server.dir

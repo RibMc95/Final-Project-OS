@@ -5,18 +5,15 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <windows.h> // For PlaySoundA
-#include <mmsystem.h> // For PlaySoundA
-#pragma comment(lib, "winmm.lib") // Link with winmm.lib for PlaySoundA
 using namespace std;
 
-namespace 
+namespace
 {
     // Extracts the basename of a file path, e.g. "C:\Music\song.mp3" -> "song.mp3"
-    string basename_of(const string& path) 
+    string basename_of(const string &path)
     {
         size_t slash = path.find_last_of("/\\");
-        if (slash == string::npos) 
+        if (slash == string::npos)
         {
             return path;
         }
@@ -25,10 +22,10 @@ namespace
 
 } // namespace
 
-bool send_audio_file(int socket_fd, const string& file_path) // Returns true on success, false on failure.
+bool send_audio_file(int socket_fd, const string &file_path) // Returns true on success, false on failure.
 {
     ifstream audio(file_path, ios::binary);
-    if (!audio) 
+    if (!audio)
     {
         cout << "Could not open audio file: " << file_path << "\n";
         return false;
@@ -36,7 +33,7 @@ bool send_audio_file(int socket_fd, const string& file_path) // Returns true on 
 
     string filename = protocol::safe_filename(basename_of(file_path));
 
-    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_BEGIN, filename)) 
+    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_BEGIN, filename))
     {
         cout << "Could not send audio begin frame.\n";
         return false;
@@ -45,15 +42,15 @@ bool send_audio_file(int socket_fd, const string& file_path) // Returns true on 
     vector<char> buffer(protocol::AUDIO_CHUNK_SIZE);
     size_t total_bytes = 0;
 
-    while (audio) 
+    while (audio)
     {
         audio.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
         streamsize count = audio.gcount();
 
-        if (count > 0) 
+        if (count > 0)
         {
             vector<char> chunk(buffer.begin(), buffer.begin() + count);
-            if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_CHUNK, chunk)) 
+            if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_CHUNK, chunk))
             {
                 cout << "Could not send audio chunk.\n";
                 return false;
@@ -62,7 +59,7 @@ bool send_audio_file(int socket_fd, const string& file_path) // Returns true on 
         }
     }
 
-    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_END, filename)) 
+    if (!utils::send_frame(socket_fd, protocol::FRAME_AUDIO_END, filename))
     {
         cout << "Could not send audio end frame.\n";
         return false;
@@ -71,4 +68,3 @@ bool send_audio_file(int socket_fd, const string& file_path) // Returns true on 
     cout << "Sent audio file '" << filename << "' (" << total_bytes << " bytes).\n";
     return true;
 }
-

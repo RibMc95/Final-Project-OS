@@ -1,0 +1,144 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/cache.cpp
+../shared/cache.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/cache.h
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/chat_server.cpp
+chat_server.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/chat_server.h
+../shared/protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+../shared/utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+arpa/inet.h
+-
+cstring
+-
+iostream
+-
+netinet/in.h
+-
+sys/socket.h
+-
+unistd.h
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/chat_server.h
+group_manager.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/group_manager.h
+thread_pool.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/thread_pool.h
+atomic
+-
+string
+-
+thread
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/group_manager.cpp
+group_manager.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/group_manager.h
+../shared/utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+fstream
+-
+sstream
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/group_manager.h
+../shared/cache.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/cache.h
+mutex
+-
+set
+-
+string
+-
+unordered_map
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/main.cpp
+chat_server.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/chat_server.h
+iostream
+-
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/thread_pool.cpp
+thread_pool.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/thread_pool.h
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/server/thread_pool.h
+condition_variable
+-
+functional
+-
+mutex
+-
+queue
+-
+string
+-
+thread
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/cache.h
+deque
+-
+string
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+cstdint
+-
+cstddef
+-
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+algorithm
+-
+chrono
+-
+cctype
+-
+cstdint
+-
+ctime
+-
+cstring
+-
+iomanip
+-
+iostream
+-
+sstream
+-
+string
+-
+sys/socket.h
+-
+unistd.h
+-
+vector
+-
+

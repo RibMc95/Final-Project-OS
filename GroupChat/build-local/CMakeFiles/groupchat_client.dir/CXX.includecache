@@ -1,0 +1,170 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../shared/protocol.h
+cstdint
+-
+cstddef
+-
+string
+-
+
+../shared/utils.h
+protocol.h
+../shared/protocol.h
+algorithm
+-
+chrono
+-
+cctype
+-
+cstdint
+-
+ctime
+-
+cstring
+-
+iomanip
+-
+iostream
+-
+sstream
+-
+string
+-
+sys/socket.h
+-
+unistd.h
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.cpp
+audio_client.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.h
+../shared/protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+../shared/utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+fstream
+-
+iostream
+-
+string
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.h
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.cpp
+chat_client.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.h
+audio_client.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.h
+protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/protocol.h
+utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/utils.h
+video_client.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.h
+arpa/inet.h
+-
+filesystem
+-
+cstdlib
+-
+iostream
+-
+netdb.h
+-
+sstream
+-
+sys/socket.h
+-
+unistd.h
+-
+mmsystem.h
+-
+windows.h
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.h
+atomic
+-
+fstream
+-
+string
+-
+thread
+-
+vector
+-
+filesystem
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp
+video_client.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.h
+../shared/protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+../shared/utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+fstream
+-
+iostream
+-
+string
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.h
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+cstdint
+-
+cstddef
+-
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+algorithm
+-
+chrono
+-
+cctype
+-
+cstdint
+-
+ctime
+-
+cstring
+-
+iomanip
+-
+iostream
+-
+sstream
+-
+string
+-
+sys/socket.h
+-
+unistd.h
+-
+vector
+-
+

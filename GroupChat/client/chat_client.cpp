@@ -6,6 +6,7 @@
 
 #include <arpa/inet.h>
 #include <filesystem>
+#include <cstdlib>
 #include <iostream>
 #include <netdb.h>
 #include <sstream>
@@ -17,6 +18,27 @@
 #endif
 
 using namespace std;
+
+namespace
+{
+    string quote_for_shell(const std::string &path)
+    {
+        std::string quoted = "'";
+        for (char ch : path)
+        {
+            if (ch == '\'')
+            {
+                quoted += "'\\''";
+            }
+            else
+            {
+                quoted += ch;
+            }
+        }
+        quoted += "'";
+        return quoted;
+    }
+}
 
 ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port), socket_fd_(-1), running_(false) {}
 
@@ -86,7 +108,7 @@ void ChatClient::run()
     cout << "  /leave\n";
     cout << "  /audio <file_path>\n";
     cout << "  /video <file_path>\n";
-    cout << "  /play              (play the last received audio)\n";
+    cout << "  /play [file_path]  (play the last received audio or a local file)\n";
     cout << "  /quit\n\n";
 
     std::string line;
@@ -130,9 +152,17 @@ void ChatClient::run()
             continue;
         }
 
-        if (line == "/play")
+        if (line.rfind("/play", 0) == 0)
         {
-            play_received_audio();
+            std::string path = utils::trim(line.substr(5));
+            if (path.empty())
+            {
+                play_received_audio();
+            }
+            else
+            {
+                play_audio_file(path);
+            }
             continue;
         }
 
@@ -238,7 +268,7 @@ void ChatClient::handle_audio_end()
 
     incoming_audio_.close();
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
-    cout << "Type /play to play the audio." << endl;
+    cout << "Type /play to play it, or /play <file_path> for another audio file." << endl;
 }
 
 void ChatClient::play_received_audio() const
@@ -249,13 +279,50 @@ void ChatClient::play_received_audio() const
         return;
     }
 #ifdef _WIN32
-    cout << "Playing: " << incoming_audio_name_ << endl;
-    if (!PlaySoundA(incoming_audio_name_.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
+    play_audio_file(incoming_audio_name_);
+#else
+    play_audio_file(incoming_audio_name_);
+#endif
+}
+
+void ChatClient::play_audio_file(const std::string &path) const
+{
+    if (path.empty())
     {
-        cout << "Playback failed for: " << incoming_audio_name_ << ". PlaySoundA typically expects a WAV file." << endl;
+        cout << "Usage: /play <file_path>" << endl;
+        return;
+    }
+
+    if (!std::filesystem::exists(path))
+    {
+        cout << "ERROR: Audio file not found: " << path << endl;
+        return;
+    }
+
+#ifdef _WIN32
+    cout << "Playing: " << path << endl;
+    if (!PlaySoundA(path.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
+    {
+        cout << "Playback failed for: " << path << ". PlaySoundA typically expects a WAV file." << endl;
     }
 #else
-    cout << "Playback is only supported on Windows builds. File saved at: " << incoming_audio_name_ << endl;
+    const std::string quoted_path = quote_for_shell(path);
+    const std::vector<std::string> commands = {
+        "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1",
+        "aplay " + quoted_path + " >/dev/null 2>&1",
+        "paplay " + quoted_path + " >/dev/null 2>&1",
+        "mpg123 " + quoted_path + " >/dev/null 2>&1"};
+
+    for (const auto &command : commands)
+    {
+        if (std::system(command.c_str()) == 0)
+        {
+            cout << "Played: " << path << endl;
+            return;
+        }
+    }
+
+    cout << "Playback failed for: " << path << ". Install ffplay, aplay, paplay, or mpg123 in the terminal environment." << endl;
 #endif
 }
 

@@ -1,0 +1,66 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+cstdint
+-
+cstddef
+-
+string
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+protocol.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
+algorithm
+-
+chrono
+-
+cctype
+-
+cstdint
+-
+ctime
+-
+cstring
+-
+iomanip
+-
+iostream
+-
+sstream
+-
+string
+-
+sys/socket.h
+-
+unistd.h
+-
+vector
+-
+
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/tests/bot_test.cpp
+../shared/utils.h
+/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h
+arpa/inet.h
+-
+chrono
+-
+iostream
+-
+netinet/in.h
+-
+string
+-
+sys/socket.h
+-
+thread
+-
+unistd.h
+-
+
