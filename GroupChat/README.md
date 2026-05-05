@@ -84,6 +84,28 @@ Terminal 3:
 ./build/groupchat_client 127.0.0.1 5555
 ```
 
+## Audio Backend Setup (Linux/WSL)
+
+The `/play` command needs at least one terminal audio backend installed.
+
+Ubuntu/WSL install (run in terminal):
+
+```bash
+sudo apt update
+sudo apt install -y ffmpeg alsa-utils pulseaudio-utils mpg123
+```
+
+Quick check (any one path shown means playback backend is available):
+
+```bash
+command -v ffplay || true
+command -v aplay || true
+command -v paplay || true
+command -v mpg123 || true
+```
+
+If none are found, `/play` will fail with an audio backend message.
+
 ## Client Commands
 
 ```text
