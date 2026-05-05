@@ -4,11 +4,6 @@
 #include "utils.h"
 #include "video_client.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <mmsystem.h>
-#endif
-
 #include <arpa/inet.h>
 #include <filesystem>
 #include <cstdlib>
@@ -321,62 +316,19 @@ void ChatClient::play_audio_file(const std::string &path) const
     const std::string abs_path = std::filesystem::absolute(path).string();
 
 #ifdef _WIN32
-    // Use PlaySound for WAV files (winmm); fall back to default player for other formats.
-    std::string ext;
-    for (char c : std::filesystem::path(abs_path).extension().string())
-        ext += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-
-    if (ext == ".wav")
-    {
-        if (PlaySoundA(abs_path.c_str(), NULL, SND_FILENAME | SND_ASYNC))
-            cout << "Playing: " << path << endl;
-        else
-            cout << "Playback failed for: " << path << ". Could not play WAV file." << endl;
-    }
+    const std::string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
+    if (std::system(open_cmd.c_str()) == 0)
+        cout << "Opened in Windows media player: " << path << endl;
     else
-    {
-        const std::string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
-        if (std::system(open_cmd.c_str()) == 0)
-            cout << "Opened in Windows media player: " << path << endl;
-        else
-            cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
-    }
+        cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
 #else
+    // WSL: convert path to Windows path and open in Windows media player.
     const std::string quoted_path = quote_for_shell(abs_path);
-    bool played = false;
-
-    // Detect WSL by checking for /proc/sys/fs/binfmt_misc/WSLInterop or WSL_DISTRO_NAME env var.
-    bool is_wsl = (std::getenv("WSL_DISTRO_NAME") != nullptr) ||
-                  (std::filesystem::exists("/proc/sys/fs/binfmt_misc/WSLInterop"));
-
-    if (is_wsl)
-    {
-        const std::string wsl_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
-        if (std::system(wsl_cmd.c_str()) == 0)
-        {
-            cout << "Opened in Windows media player: " << path << endl;
-            played = true;
-        }
-    }
-
-    if (!played)
-    {
-        // Native Linux: try common audio players in order.
-        const std::string players[] = {"xdg-open", "ffplay -nodisp -autoexit", "aplay", "paplay", "mpg123"};
-        for (const auto &player : players)
-        {
-            const std::string cmd = player + " " + quoted_path + " >/dev/null 2>&1";
-            if (std::system(cmd.c_str()) == 0)
-            {
-                cout << "Playing: " << path << endl;
-                played = true;
-                break;
-            }
-        }
-    }
-
-    if (!played)
-        cout << "Playback failed for: " << path << ". Install xdg-open, ffplay, aplay, paplay, or mpg123." << endl;
+    const std::string open_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+    if (std::system(open_cmd.c_str()) == 0)
+        cout << "Opened in Windows media player: " << path << endl;
+    else
+        cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
 #endif
 }
 
