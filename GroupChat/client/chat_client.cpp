@@ -13,6 +13,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <netdb.h>
 #include <sstream>
@@ -28,6 +29,7 @@ namespace
     string quote_for_shell(const string &path)
     {
         string quoted = "'";
+
         for (char ch : path)
         {
             if (ch == '\'')
@@ -39,6 +41,7 @@ namespace
                 quoted += ch;
             }
         }
+
         quoted += "'";
         return quoted;
     }
@@ -55,6 +58,7 @@ namespace
     string quote_for_cmd(const string &path)
     {
         string quoted = "\"";
+
         for (char ch : path)
         {
             if (ch == '"')
@@ -66,6 +70,7 @@ namespace
                 quoted += ch;
             }
         }
+
         quoted += "\"";
         return quoted;
     }
@@ -75,16 +80,20 @@ namespace
     {
         string ext = filesystem::path(path).extension().string();
         string lowered;
+
         for (char c : ext)
         {
             lowered += static_cast<char>(tolower(static_cast<unsigned char>(c)));
         }
+
         return lowered;
     }
 }
 
 ChatClient::ChatClient(string host, int port)
-    : host_(move(host)), port_(port), socket_fd_(-1), running_(false) {}
+    : host_(move(host)), port_(port), socket_fd_(-1), running_(false)
+{
+}
 
 ChatClient::~ChatClient()
 {
@@ -115,6 +124,7 @@ ChatClient::~ChatClient()
 bool ChatClient::connect_to_server()
 {
     socket_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
+
     if (socket_fd_ < 0)
     {
         cout << "ERROR: Could not create socket.\n";
@@ -138,8 +148,10 @@ bool ChatClient::connect_to_server()
     }
 
     running_ = true;
+
     receiver_ = thread([this]()
                        { receive_loop(); });
+
     return true;
 }
 
@@ -156,9 +168,11 @@ void ChatClient::run()
     cout << "  /quit\n\n";
 
     string line;
+
     while (running_ && getline(cin, line))
     {
         line = utils::trim(line);
+
         if (line.empty())
         {
             continue;
@@ -167,6 +181,7 @@ void ChatClient::run()
         if (line.rfind("/audio ", 0) == 0)
         {
             string path = utils::trim(line.substr(7));
+
             if (path.empty())
             {
                 cout << "Usage: /audio <file_path>\n";
@@ -177,12 +192,14 @@ void ChatClient::run()
             {
                 cout << "ERROR: Could not send audio file.\n";
             }
+
             continue;
         }
 
         if (line.rfind("/video ", 0) == 0)
         {
             string path = utils::trim(line.substr(7));
+
             if (path.empty())
             {
                 cout << "Usage: /video <file_path>\n";
@@ -193,12 +210,14 @@ void ChatClient::run()
             {
                 cout << "ERROR: Could not send video file.\n";
             }
+
             continue;
         }
 
         if (line == "/play" || line.rfind("/play ", 0) == 0)
         {
             string path;
+
             if (line.size() > 5)
             {
                 path = utils::trim(line.substr(5));
@@ -212,6 +231,7 @@ void ChatClient::run()
             {
                 play_audio_file(path);
             }
+
             continue;
         }
 
@@ -282,6 +302,7 @@ void ChatClient::handle_server_text(const string &text)
 void ChatClient::handle_audio_begin(const string &filename)
 {
     filesystem::create_directories("downloads");
+
     incoming_audio_name_ = "downloads/received_" + protocol::safe_filename(filename);
 
     if (incoming_audio_.is_open())
@@ -290,6 +311,7 @@ void ChatClient::handle_audio_begin(const string &filename)
     }
 
     incoming_audio_.open(incoming_audio_name_, ios::binary);
+
     if (!incoming_audio_)
     {
         cout << "ERROR: Could not open file for incoming audio: " << incoming_audio_name_ << endl;
@@ -316,6 +338,7 @@ void ChatClient::handle_audio_end()
     }
 
     incoming_audio_.close();
+
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
     cout << "Type /play to play it, or /play <file_path> for another audio file." << endl;
 }
@@ -356,8 +379,12 @@ void ChatClient::play_audio_file(const string &path) const
     const string ext = lowercase_extension(abs_path);
 
 #ifdef _WIN32
-    // Windows: PlaySound can play WAV files directly. Other formats open in the default media player.
-    if (ext == ".wav")
+    /*
+        Native Windows:
+        WAV files can be played directly with PlaySound.
+        MP3 and other audio files open in the default Windows media player.
+    */
+    if (ext == ".wav" || ext == ".wave")
     {
         if (PlaySoundA(abs_path.c_str(), NULL, SND_FILENAME | SND_ASYNC))
         {
@@ -371,85 +398,169 @@ void ChatClient::play_audio_file(const string &path) const
     else
     {
         const string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
+
         if (system(open_cmd.c_str()) == 0)
         {
             cout << "Opened in Windows default media player: " << path << endl;
         }
         else
         {
-            cout << "Playback failed for: " << path << ". Make sure a default media player is set." << endl;
+            cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
         }
     }
 #else
     const string quoted_path = quote_for_shell(abs_path);
 
-    // Linux / GitHub Codespaces / Ubuntu:
-    // Try terminal audio players first. ffplay and mpg123 handle MP3 well.
-    if (command_exists("ffplay"))
+    auto env_exists = [](const char *name) -> bool
     {
-        const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
-        cout << "Playing with ffplay: " << path << endl;
-        if (system(cmd.c_str()) == 0)
+        const char *value = getenv(name);
+        return value != nullptr && string(value).size() > 0;
+    };
+
+    bool is_codespaces = env_exists("CODESPACES");
+    bool is_wsl = env_exists("WSL_DISTRO_NAME") || env_exists("WSL_INTEROP");
+    bool has_linux_audio_device = filesystem::exists("/dev/snd");
+
+    /*
+        GitHub Codespaces:
+        The file is received correctly, but Codespaces does not provide
+        a normal Linux sound card. This prevents ALSA/ffplay from working.
+    */
+    if (is_codespaces)
+    {
+        cout << "Audio file was received successfully:" << endl;
+        cout << "  " << abs_path << endl;
+        cout << endl;
+        cout << "This is a GitHub Codespace. Codespaces does not provide a Linux sound device." << endl;
+        cout << "That is why ffplay gives ALSA errors like 'cannot find card 0'." << endl;
+        cout << endl;
+
+        if (command_exists("ffprobe"))
+        {
+            cout << "Checking the audio file with ffprobe:" << endl;
+            string probe_cmd = "ffprobe -hide_banner " + quoted_path;
+            system(probe_cmd.c_str());
+            cout << endl;
+        }
+
+        cout << "To hear the sound, download this file from VS Code Explorer:" << endl;
+        cout << "  " << abs_path << endl;
+        cout << endl;
+        cout << "Right-click the MP3 file, then choose Download." << endl;
+        return;
+    }
+
+    /*
+        WSL:
+        WSL may not expose Linux audio correctly, but Windows can play the file.
+        This opens the file in the Windows default media player.
+    */
+    if (is_wsl && command_exists("wslpath"))
+    {
+        string command =
+            "powershell.exe -NoProfile -Command \"Start-Process -FilePath \\\"$(wslpath -w " +
+            quoted_path +
+            ")\\\"\"";
+
+        cout << "Opening audio file with the Windows default media player:" << endl;
+        cout << "  " << abs_path << endl;
+
+        if (system(command.c_str()) == 0)
         {
             return;
         }
+
+        cout << "Could not open the file with Windows media player." << endl;
+        cout << "You can still manually open this file:" << endl;
+        cout << "  " << abs_path << endl;
+        return;
     }
 
-    if (command_exists("mpg123"))
+    /*
+        Real Linux with a real audio device:
+        Only try these players if /dev/snd exists.
+    */
+    if (has_linux_audio_device)
     {
-        const string cmd = "mpg123 -q " + quoted_path;
-        cout << "Playing with mpg123: " << path << endl;
-        if (system(cmd.c_str()) == 0)
+        if (command_exists("ffplay"))
         {
-            return;
+            const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
+            cout << "Playing with ffplay: " << path << endl;
+
+            if (system(cmd.c_str()) == 0)
+            {
+                return;
+            }
+        }
+
+        if (command_exists("mpg123"))
+        {
+            const string cmd = "mpg123 -q " + quoted_path;
+            cout << "Playing with mpg123: " << path << endl;
+
+            if (system(cmd.c_str()) == 0)
+            {
+                return;
+            }
+        }
+
+        if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
+        {
+            const string cmd = "paplay " + quoted_path;
+            cout << "Playing with paplay: " << path << endl;
+
+            if (system(cmd.c_str()) == 0)
+            {
+                return;
+            }
+        }
+
+        if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
+        {
+            const string cmd = "aplay -q " + quoted_path;
+            cout << "Playing with aplay: " << path << endl;
+
+            if (system(cmd.c_str()) == 0)
+            {
+                return;
+            }
         }
     }
 
-    // paplay/aplay are useful for WAV files and systems with PulseAudio/ALSA configured.
-    if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
-    {
-        const string cmd = "paplay " + quoted_path;
-        cout << "Playing with paplay: " << path << endl;
-        if (system(cmd.c_str()) == 0)
-        {
-            return;
-        }
-    }
-
-    if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
-    {
-        const string cmd = "aplay -q " + quoted_path;
-        cout << "Playing with aplay: " << path << endl;
-        if (system(cmd.c_str()) == 0)
-        {
-            return;
-        }
-    }
-
-    // Desktop Linux fallback. This may not work in a headless Codespace, but helps locally.
+    /*
+        Linux desktop fallback:
+        This works only if your Linux system has a graphical desktop.
+    */
     if (command_exists("xdg-open"))
     {
         const string cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1 &";
+
         if (system(cmd.c_str()) == 0)
         {
-            cout << "Opened audio file with the default desktop app: " << path << endl;
+            cout << "Opened audio file with the default desktop app:" << endl;
+            cout << "  " << abs_path << endl;
             return;
         }
     }
 
-    cout << "Playback failed for: " << path << "." << endl;
-    cout << "Install at least one terminal player in Ubuntu/Codespaces:" << endl;
-    cout << "  sudo apt update" << endl;
-    cout << "  sudo apt install -y ffmpeg mpg123 alsa-utils pulseaudio-utils" << endl;
-    cout << "Then try: /play " << path << endl;
-    cout << "Note: GitHub Codespaces is usually headless, so it may not have a real audio device." << endl;
-    cout << "If the player is installed but you still hear nothing, download the file from the downloads folder and play it on your computer." << endl;
+    /*
+        Final fallback:
+        The project still works because the audio was transferred and saved.
+    */
+    cout << "Audio file was received successfully, but this terminal cannot play sound directly." << endl;
+    cout << "Saved file:" << endl;
+    cout << "  " << abs_path << endl;
+    cout << endl;
+    cout << "Reason: Linux cannot find an audio device such as /dev/snd." << endl;
+    cout << "Download or open the file locally to hear it." << endl;
+    return;
 #endif
 }
 
 void ChatClient::handle_video_begin(const string &filename)
 {
     filesystem::create_directories("downloads");
+
     incoming_video_name_ = "downloads/received_" + protocol::safe_filename(filename);
 
     if (incoming_video_.is_open())
@@ -458,6 +569,7 @@ void ChatClient::handle_video_begin(const string &filename)
     }
 
     incoming_video_.open(incoming_video_name_, ios::binary);
+
     if (!incoming_video_)
     {
         cout << "ERROR: Could not open file for incoming video: " << incoming_video_name_ << endl;
@@ -484,5 +596,6 @@ void ChatClient::handle_video_end()
     }
 
     incoming_video_.close();
+
     cout << "Video saved to: " << incoming_video_name_ << endl;
 }
