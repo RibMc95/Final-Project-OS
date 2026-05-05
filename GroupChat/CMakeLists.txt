@@ -36,12 +36,6 @@ target_link_libraries(groupchat_client
     Threads::Threads
 )
 
-if (WIN32)
-    target_link_libraries(groupchat_client
-        winmm
-    )
-endif()
-
 # Optional bot test executable
 add_executable(bot_test
     tests/bot_test.cpp

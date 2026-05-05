@@ -322,13 +322,28 @@ void ChatClient::play_audio_file(const std::string &path) const
     else
         cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
 #else
-    // WSL: convert path to Windows path and open in Windows media player.
     const std::string quoted_path = quote_for_shell(abs_path);
-    const std::string open_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+
+    // Detect WSL: WSL_DISTRO_NAME env var is set by WSL automatically.
+    const bool is_wsl = (std::getenv("WSL_DISTRO_NAME") != nullptr);
+
+    if (is_wsl)
+    {
+        // WSL: convert Linux path to Windows path and open in Windows media player.
+        const std::string open_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+        if (std::system(open_cmd.c_str()) == 0)
+        {
+            cout << "Opened in Windows media player: " << path << endl;
+            return;
+        }
+    }
+
+    // Native Linux (or WSL fallback): use xdg-open.
+    const std::string open_cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1";
     if (std::system(open_cmd.c_str()) == 0)
-        cout << "Opened in Windows media player: " << path << endl;
+        cout << "Playing: " << path << endl;
     else
-        cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
+        cout << "Playback failed for: " << path << ". Install xdg-open or a media player." << endl;
 #endif
 }
 
