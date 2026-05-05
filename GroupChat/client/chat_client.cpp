@@ -342,14 +342,41 @@ void ChatClient::play_audio_file(const std::string &path) const
             cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
     }
 #else
-    // WSL: convert the Linux path to a Windows path then open with the Windows default media player.
     const std::string quoted_path = quote_for_shell(abs_path);
-    const std::string open_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+    bool played = false;
 
-    if (std::system(open_cmd.c_str()) == 0)
-        cout << "Opened in Windows media player: " << path << endl;
-    else
-        cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
+    // Detect WSL by checking for /proc/sys/fs/binfmt_misc/WSLInterop or WSL_DISTRO_NAME env var.
+    bool is_wsl = (std::getenv("WSL_DISTRO_NAME") != nullptr) ||
+                  (std::filesystem::exists("/proc/sys/fs/binfmt_misc/WSLInterop"));
+
+    if (is_wsl)
+    {
+        const std::string wsl_cmd = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+        if (std::system(wsl_cmd.c_str()) == 0)
+        {
+            cout << "Opened in Windows media player: " << path << endl;
+            played = true;
+        }
+    }
+
+    if (!played)
+    {
+        // Native Linux: try common audio players in order.
+        const std::string players[] = {"xdg-open", "ffplay -nodisp -autoexit", "aplay", "paplay", "mpg123"};
+        for (const auto &player : players)
+        {
+            const std::string cmd = player + " " + quoted_path + " >/dev/null 2>&1";
+            if (std::system(cmd.c_str()) == 0)
+            {
+                cout << "Playing: " << path << endl;
+                played = true;
+                break;
+            }
+        }
+    }
+
+    if (!played)
+        cout << "Playback failed for: " << path << ". Install xdg-open, ffplay, aplay, paplay, or mpg123." << endl;
 #endif
 }
 
