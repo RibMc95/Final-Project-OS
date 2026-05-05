@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <filesystem>
 #include <cstdlib>
+#include <cctype>
 #include <iostream>
 #include <netdb.h>
 #include <sstream>
@@ -37,6 +38,15 @@ namespace
         }
         quoted += "'";
         return quoted;
+    }
+
+    string lower_ascii(std::string value)
+    {
+        for (char &ch : value)
+        {
+            ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        }
+        return value;
     }
 }
 
@@ -308,28 +318,42 @@ void ChatClient::play_audio_file(const std::string &path) const
 #else
     const std::string abs_path = std::filesystem::absolute(path).string();
     const std::string quoted_path = quote_for_shell(abs_path);
-    const std::vector<std::string> commands = {
-        "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1",
-        "aplay " + quoted_path + " >/dev/null 2>&1",
-        "paplay " + quoted_path + " >/dev/null 2>&1",
-        "mpg123 " + quoted_path + " >/dev/null 2>&1"};
 
-    for (const auto &command : commands)
+    // In WSL, the Windows media player is usually more reliable than Linux audio sinks.
+    if (std::getenv("WSL_DISTRO_NAME") != nullptr)
     {
-        if (std::system(command.c_str()) == 0)
+        const std::string wsl_fallback = "win_path=$(wslpath -w " + quoted_path + ") && cmd.exe /C start \"\" \"$win_path\" >/dev/null 2>&1";
+        if (std::system(wsl_fallback.c_str()) == 0)
         {
-            cout << "Played: " << path << endl;
+            cout << "Opened in Windows media player: " << abs_path << endl;
             return;
         }
     }
 
-    // WSL fallback: open with the Windows default media player.
-    if (std::getenv("WSL_DISTRO_NAME") != nullptr)
+    const std::string ext = lower_ascii(std::filesystem::path(abs_path).extension().string());
+    std::vector<std::pair<std::string, std::string>> commands;
+    if (ext == ".wav" || ext == ".wave")
     {
-        const std::string wsl_fallback = "cmd.exe /C start \"\" \"$(wslpath -w " + quoted_path + ")\" >/dev/null 2>&1";
-        if (std::system(wsl_fallback.c_str()) == 0)
+        commands = {
+            {"ffplay", "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1"},
+            {"aplay", "aplay " + quoted_path + " >/dev/null 2>&1"},
+            {"paplay", "paplay " + quoted_path + " >/dev/null 2>&1"},
+            {"mpg123", "mpg123 " + quoted_path + " >/dev/null 2>&1"}};
+    }
+    else
+    {
+        commands = {
+            {"ffplay", "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1"},
+            {"mpg123", "mpg123 " + quoted_path + " >/dev/null 2>&1"},
+            {"paplay", "paplay " + quoted_path + " >/dev/null 2>&1"},
+            {"aplay", "aplay " + quoted_path + " >/dev/null 2>&1"}};
+    }
+
+    for (const auto &candidate : commands)
+    {
+        if (std::system(candidate.second.c_str()) == 0)
         {
-            cout << "Opened in Windows media player: " << abs_path << endl;
+            cout << "Played via " << candidate.first << ": " << path << endl;
             return;
         }
     }
