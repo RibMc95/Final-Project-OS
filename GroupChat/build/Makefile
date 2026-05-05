@@ -227,6 +227,30 @@ client/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_client.dir/build.make CMakeFiles/groupchat_client.dir/client/main.cpp.s
 .PHONY : client/main.cpp.s
 
+client/video_client.o: client/video_client.cpp.o
+.PHONY : client/video_client.o
+
+# target to build an object file
+client/video_client.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_client.dir/build.make CMakeFiles/groupchat_client.dir/client/video_client.cpp.o
+.PHONY : client/video_client.cpp.o
+
+client/video_client.i: client/video_client.cpp.i
+.PHONY : client/video_client.i
+
+# target to preprocess a source file
+client/video_client.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_client.dir/build.make CMakeFiles/groupchat_client.dir/client/video_client.cpp.i
+.PHONY : client/video_client.cpp.i
+
+client/video_client.s: client/video_client.cpp.s
+.PHONY : client/video_client.s
+
+# target to generate assembly for a file
+client/video_client.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/groupchat_client.dir/build.make CMakeFiles/groupchat_client.dir/client/video_client.cpp.s
+.PHONY : client/video_client.cpp.s
+
 server/cache.o: server/cache.cpp.o
 .PHONY : server/cache.o
 
@@ -391,6 +415,9 @@ help:
 	@echo "... client/main.o"
 	@echo "... client/main.i"
 	@echo "... client/main.s"
+	@echo "... client/video_client.o"
+	@echo "... client/video_client.i"
+	@echo "... client/video_client.s"
 	@echo "... server/cache.o"
 	@echo "... server/cache.i"
 	@echo "... server/cache.s"

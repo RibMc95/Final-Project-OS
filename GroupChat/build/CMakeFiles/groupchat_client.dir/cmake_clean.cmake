@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o.d"
   "CMakeFiles/groupchat_client.dir/client/main.cpp.o"
   "CMakeFiles/groupchat_client.dir/client/main.cpp.o.d"
+  "CMakeFiles/groupchat_client.dir/client/video_client.cpp.o"
+  "CMakeFiles/groupchat_client.dir/client/video_client.cpp.o.d"
   "groupchat_client"
   "groupchat_client.pdb"
 )

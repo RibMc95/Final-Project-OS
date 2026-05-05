@@ -11,6 +11,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/workspaces/Final-Project-OS/GroupChat/client/audio_client.cpp" "CMakeFiles/groupchat_client.dir/client/audio_client.cpp.o" "gcc" "CMakeFiles/groupchat_client.dir/client/audio_client.cpp.o.d"
   "/workspaces/Final-Project-OS/GroupChat/client/chat_client.cpp" "CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o" "gcc" "CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o.d"
   "/workspaces/Final-Project-OS/GroupChat/client/main.cpp" "CMakeFiles/groupchat_client.dir/client/main.cpp.o" "gcc" "CMakeFiles/groupchat_client.dir/client/main.cpp.o.d"
+  "/workspaces/Final-Project-OS/GroupChat/client/video_client.cpp" "CMakeFiles/groupchat_client.dir/client/video_client.cpp.o" "gcc" "CMakeFiles/groupchat_client.dir/client/video_client.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
