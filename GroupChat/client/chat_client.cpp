@@ -411,149 +411,67 @@ void ChatClient::play_audio_file(const string &path) const
 #else
     const string quoted_path = quote_for_shell(abs_path);
 
-    auto env_exists = [](const char *name) -> bool
+    // Linux / GitHub Codespaces / Ubuntu:
+    // Try terminal audio players first. ffplay and mpg123 handle MP3 well.
+    if (command_exists("ffplay"))
     {
-        const char *value = getenv(name);
-        return value != nullptr && string(value).size() > 0;
-    };
-
-    bool is_codespaces = env_exists("CODESPACES");
-    bool is_wsl = env_exists("WSL_DISTRO_NAME") || env_exists("WSL_INTEROP");
-    bool has_linux_audio_device = filesystem::exists("/dev/snd");
-
-    /*
-        GitHub Codespaces:
-        The file is received correctly, but Codespaces does not provide
-        a normal Linux sound card. This prevents ALSA/ffplay from working.
-    */
-    if (is_codespaces)
-    {
-        cout << "Audio file was received successfully:" << endl;
-        cout << "  " << abs_path << endl;
-        cout << endl;
-        cout << "This is a GitHub Codespace. Codespaces does not provide a Linux sound device." << endl;
-        cout << "That is why ffplay gives ALSA errors like 'cannot find card 0'." << endl;
-        cout << endl;
-
-        if (command_exists("ffprobe"))
-        {
-            cout << "Checking the audio file with ffprobe:" << endl;
-            string probe_cmd = "ffprobe -hide_banner " + quoted_path;
-            system(probe_cmd.c_str());
-            cout << endl;
-        }
-
-        cout << "To hear the sound, download this file from VS Code Explorer:" << endl;
-        cout << "  " << abs_path << endl;
-        cout << endl;
-        cout << "Right-click the MP3 file, then choose Download." << endl;
-        return;
-    }
-
-    /*
-        WSL:
-        WSL may not expose Linux audio correctly, but Windows can play the file.
-        This opens the file in the Windows default media player.
-    */
-    if (is_wsl && command_exists("wslpath"))
-    {
-        string command =
-            "powershell.exe -NoProfile -Command \"Start-Process -FilePath \\\"$(wslpath -w " +
-            quoted_path +
-            ")\\\"\"";
-
-        cout << "Opening audio file with the Windows default media player:" << endl;
-        cout << "  " << abs_path << endl;
-
-        if (system(command.c_str()) == 0)
+        const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
+        cout << "Playing with ffplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
         {
             return;
         }
-
-        cout << "Could not open the file with Windows media player." << endl;
-        cout << "You can still manually open this file:" << endl;
-        cout << "  " << abs_path << endl;
-        return;
     }
 
-    /*
-        Real Linux with a real audio device:
-        Only try these players if /dev/snd exists.
-    */
-    if (has_linux_audio_device)
+    if (command_exists("mpg123"))
     {
-        if (command_exists("ffplay"))
+        const string cmd = "mpg123 -q " + quoted_path;
+        cout << "Playing with mpg123: " << path << endl;
+        if (system(cmd.c_str()) == 0)
         {
-            const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
-            cout << "Playing with ffplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if (command_exists("mpg123"))
-        {
-            const string cmd = "mpg123 -q " + quoted_path;
-            cout << "Playing with mpg123: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
-        {
-            const string cmd = "paplay " + quoted_path;
-            cout << "Playing with paplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
-        {
-            const string cmd = "aplay -q " + quoted_path;
-            cout << "Playing with aplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
+            return;
         }
     }
 
-    /*
-        Linux desktop fallback:
-        This works only if your Linux system has a graphical desktop.
-    */
+    // paplay/aplay are useful for WAV files and systems with PulseAudio/ALSA configured.
+    if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
+    {
+        const string cmd = "paplay " + quoted_path;
+        cout << "Playing with paplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
+    {
+        const string cmd = "aplay -q " + quoted_path;
+        cout << "Playing with aplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    // Desktop Linux fallback. This may not work in a headless Codespace, but helps locally.
     if (command_exists("xdg-open"))
     {
         const string cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1 &";
-
         if (system(cmd.c_str()) == 0)
         {
-            cout << "Opened audio file with the default desktop app:" << endl;
-            cout << "  " << abs_path << endl;
+            cout << "Opened audio file with the default desktop app: " << path << endl;
             return;
         }
     }
 
-    /*
-        Final fallback:
-        The project still works because the audio was transferred and saved.
-    */
-    cout << "Audio file was received successfully, but this terminal cannot play sound directly." << endl;
-    cout << "Saved file:" << endl;
-    cout << "  " << abs_path << endl;
-    cout << endl;
-    cout << "Reason: Linux cannot find an audio device such as /dev/snd." << endl;
-    cout << "Download or open the file locally to hear it." << endl;
-    return;
+    cout << "Playback failed for: " << path << "." << endl;
+    cout << "Install at least one terminal player in Ubuntu/Codespaces:" << endl;
+    cout << "  sudo apt update" << endl;
+    cout << "  sudo apt install -y ffmpeg mpg123 alsa-utils pulseaudio-utils" << endl;
+    cout << "Then try: /play " << path << endl;
+    cout << "Note: GitHub Codespaces is usually headless, so it may not have a real audio device." << endl;
+    cout << "If the player is installed but you still hear nothing, download the file from the downloads folder and play it on your computer." << endl;
 #endif
 }
 
