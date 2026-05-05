@@ -12,7 +12,7 @@ GroupChat/
 │   ├── chat_client.cpp
 │   ├── chat_client.h
 │   ├── audio_client.cpp
-│   └── video_cilent.cpp
+│   └── video_client.cpp
 ├── server/
 │   ├── main.cpp
 │   ├── chat_server.cpp
@@ -45,8 +45,8 @@ GroupChat/
 - Clients can list active groups using `/list`.
 - Each group has recent message history using a fixed-size circular cache.
 - The server has a thread pool and supports:
- 	- `rr` = Round Robin/FIFO task queue
- 	- `sjf` = Shortest Job First based on message length
+  - `rr` = Round Robin/FIFO task queue
+  - `sjf` = Shortest Job First based on message length
 - Clients can send audio files with `/audio <file_path>`.
 - Clients can send video files with `/video <file_path>`.
 - Clients can play the last received audio with `/play` or play a local audio file from the terminal with `/play <file_path>`.
@@ -54,8 +54,8 @@ GroupChat/
 ## Build
 
 ```bash
-cmake -S . -B build-local
-cmake --build build-local
+cmake -S . -B build
+cmake --build build
 ```
 
 ## Run
@@ -63,26 +63,48 @@ cmake --build build-local
 Terminal 1:
 
 ```bash
-./build-local/groupchat_server 5555 rr
+./build/groupchat_server 5555 rr
 ```
 
 or:
 
 ```bash
-./build-local/groupchat_server 5555 sjf
+./build/groupchat_server 5555 sjf
 ```
 
 Terminal 2:
 
 ```bash
-./build-local/groupchat_client 127.0.0.1 5555
+./build/groupchat_client 127.0.0.1 5555
 ```
 
 Terminal 3:
 
 ```bash
-./build-local/groupchat_client 127.0.0.1 5555
+./build/groupchat_client 127.0.0.1 5555
 ```
+
+## Audio Backend Setup (Linux/WSL)
+
+The `/play` command needs at least one terminal audio backend installed.
+
+Ubuntu/WSL install (run in terminal):
+
+```bash
+sudo apt update
+sudo apt install -y ffmpeg alsa-utils pulseaudio-utils mpg123
+```
+
+Quick check (any one path shown means playback backend is available):
+
+```bash
+command -v ffplay || true
+command -v aplay || true
+command -v paplay || true
+command -v mpg123 || true
+```
+
+If none are found, `/play` will fail with an audio backend message.
 
 ## Client Commands
 
@@ -106,7 +128,7 @@ On Windows, `/play` uses `PlaySoundA` and works best with WAV files. On Linux or
 Start the server first, then run:
 
 ```bash
-./build-local/bot_test
+./build/bot_test
 ```
 
 ## OS Concepts to Explain

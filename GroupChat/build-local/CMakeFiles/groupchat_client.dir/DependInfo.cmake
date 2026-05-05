@@ -7,7 +7,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.cpp" "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir/client/audio_client.cpp.o"
   "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.cpp" "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o"
   "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/main.cpp" "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir/client/main.cpp.o"
-  "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp" "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o"
+  "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.cpp" "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles/groupchat_client.dir/client/video_client.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
