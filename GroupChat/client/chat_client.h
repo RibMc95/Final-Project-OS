@@ -5,7 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <filesystem> 
+#include <filesystem>
 
 class ChatClient
 {
@@ -34,6 +34,7 @@ private:
     void handle_audio_chunk(const std::vector<char> &chunk);
     void handle_audio_end();
     void play_received_audio() const;
+    void play_audio_file(const std::string &path) const;
     void handle_video_begin(const std::string &filename);
     void handle_video_chunk(const std::vector<char> &chunk);
     void handle_video_end();

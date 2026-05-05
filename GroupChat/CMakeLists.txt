@@ -29,6 +29,7 @@ add_executable(groupchat_client
     client/main.cpp
     client/chat_client.cpp
     client/audio_client.cpp
+    client/video_cilent.cpp
 )
 
 target_link_libraries(groupchat_client

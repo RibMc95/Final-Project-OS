@@ -83,7 +83,7 @@ void ChatServer::accept_loop()
         int client_id = next_client_id_++;
         groups_.register_client(client_fd, client_id);
         utils::send_server_text(client_fd, "INFO Welcome. Your sender ID is " + std::to_string(client_id) + ".");
-        utils::send_server_text(client_fd, "INFO Commands: /join <group>, /list, /leave, /audio <file>, /video <file>, /play, /quit.");
+        utils::send_server_text(client_fd, "INFO Commands: /join <group>, /list, /leave, /audio <file>, /video <file>, /play [file], /quit.");
         client_threads_.emplace_back([this, client_fd, client_id]
                                      { client_read_loop(client_fd, client_id); });
     }
@@ -171,9 +171,9 @@ void ChatServer::handle_text_line(int client_fd, const std::string &line)
     {
         utils::send_server_text(client_fd, "ERROR Use /video on the client terminal, not as a chat message.");
     }
-    else if (clean == "/play")
+    else if (clean.rfind("/play", 0) == 0)
     {
-        utils::send_server_text(client_fd, "ERROR Use /play on the client terminal, not as a chat message.");
+        utils::send_server_text(client_fd, "ERROR Use /play [file] on the client terminal, not as a chat message.");
     }
     else
     {

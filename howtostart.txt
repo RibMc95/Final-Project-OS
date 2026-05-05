@@ -7,3 +7,4 @@
 7. / join "chatroom number"
 8. send messages
 9. Sending audio is /audio ../sample/<file> Name
+10. Sending video is /audio ../sample/<file> Name
