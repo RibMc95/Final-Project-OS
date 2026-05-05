@@ -96,25 +96,25 @@ CMakeFiles/groupchat_client.dir/client/audio_client.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/groupchat_client.dir/client/audio_client.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/audio_client.cpp" -o CMakeFiles/groupchat_client.dir/client/audio_client.cpp.s
 
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: CMakeFiles/groupchat_client.dir/flags.make
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: ../client/video_cilent.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o -c "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp"
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: CMakeFiles/groupchat_client.dir/flags.make
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: ../client/video_client.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/groupchat_client.dir/client/video_client.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/groupchat_client.dir/client/video_client.cpp.o -c "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.cpp"
 
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp" > CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.i
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/groupchat_client.dir/client/video_client.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.cpp" > CMakeFiles/groupchat_client.dir/client/video_client.cpp.i
 
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp" -o CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.s
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/groupchat_client.dir/client/video_client.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.cpp" -o CMakeFiles/groupchat_client.dir/client/video_client.cpp.s
 
 # Object files for target groupchat_client
 groupchat_client_OBJECTS = \
 "CMakeFiles/groupchat_client.dir/client/main.cpp.o" \
 "CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o" \
 "CMakeFiles/groupchat_client.dir/client/audio_client.cpp.o" \
-"CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o"
+"CMakeFiles/groupchat_client.dir/client/video_client.cpp.o"
 
 # External object files for target groupchat_client
 groupchat_client_EXTERNAL_OBJECTS =
@@ -122,7 +122,7 @@ groupchat_client_EXTERNAL_OBJECTS =
 groupchat_client: CMakeFiles/groupchat_client.dir/client/main.cpp.o
 groupchat_client: CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o
 groupchat_client: CMakeFiles/groupchat_client.dir/client/audio_client.cpp.o
-groupchat_client: CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o
+groupchat_client: CMakeFiles/groupchat_client.dir/client/video_client.cpp.o
 groupchat_client: CMakeFiles/groupchat_client.dir/build.make
 groupchat_client: CMakeFiles/groupchat_client.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/build-local/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable groupchat_client"

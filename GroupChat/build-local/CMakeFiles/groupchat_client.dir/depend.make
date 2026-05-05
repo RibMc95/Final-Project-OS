@@ -16,8 +16,8 @@ CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o: ../client/video_client
 CMakeFiles/groupchat_client.dir/client/main.cpp.o: ../client/chat_client.h
 CMakeFiles/groupchat_client.dir/client/main.cpp.o: ../client/main.cpp
 
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: ../client/video_cilent.cpp
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: ../client/video_client.h
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: ../shared/protocol.h
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o: ../shared/utils.h
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: ../client/video_client.cpp
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: ../client/video_client.h
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: ../shared/protocol.h
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o: ../shared/utils.h
 

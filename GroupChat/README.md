@@ -12,7 +12,7 @@ GroupChat/
 │   ├── chat_client.cpp
 │   ├── chat_client.h
 │   ├── audio_client.cpp
-│   └── video_cilent.cpp
+│   └── video_client.cpp
 ├── server/
 │   ├── main.cpp
 │   ├── chat_server.cpp

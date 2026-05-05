@@ -16,8 +16,8 @@ CMakeFiles/groupchat_client.dir/client/chat_client.cpp.o
 CMakeFiles/groupchat_client.dir/client/main.cpp.o
  /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/chat_client.h
  /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/main.cpp
-CMakeFiles/groupchat_client.dir/client/video_cilent.cpp.o
- /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_cilent.cpp
+CMakeFiles/groupchat_client.dir/client/video_client.cpp.o
+ /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.cpp
  /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/client/video_client.h
  /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/protocol.h
  /mnt/c/Users/micah/OneDrive/Desktop/OS Assignments/Final-Project-OS/GroupChat/shared/utils.h

@@ -306,7 +306,8 @@ void ChatClient::play_audio_file(const std::string &path) const
         cout << "Playback failed for: " << path << ". PlaySoundA typically expects a WAV file." << endl;
     }
 #else
-    const std::string quoted_path = quote_for_shell(path);
+    const std::string abs_path = std::filesystem::absolute(path).string();
+    const std::string quoted_path = quote_for_shell(abs_path);
     const std::vector<std::string> commands = {
         "ffplay -nodisp -autoexit " + quoted_path + " >/dev/null 2>&1",
         "aplay " + quoted_path + " >/dev/null 2>&1",
@@ -318,6 +319,17 @@ void ChatClient::play_audio_file(const std::string &path) const
         if (std::system(command.c_str()) == 0)
         {
             cout << "Played: " << path << endl;
+            return;
+        }
+    }
+
+    // WSL fallback: open with the Windows default media player.
+    if (std::getenv("WSL_DISTRO_NAME") != nullptr)
+    {
+        const std::string wsl_fallback = "cmd.exe /C start \"\" \"$(wslpath -w " + quoted_path + ")\" >/dev/null 2>&1";
+        if (std::system(wsl_fallback.c_str()) == 0)
+        {
+            cout << "Opened in Windows media player: " << abs_path << endl;
             return;
         }
     }
