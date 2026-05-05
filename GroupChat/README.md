@@ -121,7 +121,7 @@ If none are found, `/play` will fail with an audio backend message.
 
 Any other text is treated as a group message.
 
-On Windows, `/play` uses `PlaySoundA` and works best with WAV files. On Linux or WSL, `/play` tries terminal audio players in this order: `ffplay`, `aplay`, `paplay`, then `mpg123`.
+On Windows, `/play` uses `PlaySoundA` for WAV files and opens the default Windows media player for other formats (such as MP3). On WSL, `/play` first tries opening in Windows media player, then falls back to terminal audio players (`ffplay`, `mpg123`, `paplay`, `aplay`). On native Linux, it tries those terminal players directly.
 
 ## Test Harness
 

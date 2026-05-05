@@ -48,6 +48,24 @@ namespace
         }
         return value;
     }
+
+    string quote_for_cmd(const std::string &path)
+    {
+        std::string quoted = "\"";
+        for (char ch : path)
+        {
+            if (ch == '"')
+            {
+                quoted += "\"\"";
+            }
+            else
+            {
+                quoted += ch;
+            }
+        }
+        quoted += "\"";
+        return quoted;
+    }
 }
 
 ChatClient::ChatClient(std::string host, int port) : host_(std::move(host)), port_(port), socket_fd_(-1), running_(false) {}
@@ -310,11 +328,23 @@ void ChatClient::play_audio_file(const std::string &path) const
     }
 
 #ifdef _WIN32
-    cout << "Playing: " << path << endl;
-    if (!PlaySoundA(path.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
+    const std::string abs_path = std::filesystem::absolute(path).string();
+    const std::string ext = lower_ascii(std::filesystem::path(abs_path).extension().string());
+
+    if ((ext == ".wav" || ext == ".wave") && PlaySoundA(abs_path.c_str(), nullptr, SND_FILENAME | SND_ASYNC))
     {
-        cout << "Playback failed for: " << path << ". PlaySoundA typically expects a WAV file." << endl;
+        cout << "Played via PlaySoundA: " << abs_path << endl;
+        return;
     }
+
+    const std::string open_default = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
+    if (std::system(open_default.c_str()) == 0)
+    {
+        cout << "Opened in Windows media player: " << abs_path << endl;
+        return;
+    }
+
+    cout << "Playback failed for: " << path << ". Install or configure a default Windows media player." << endl;
 #else
     const std::string abs_path = std::filesystem::absolute(path).string();
     const std::string quoted_path = quote_for_shell(abs_path);
