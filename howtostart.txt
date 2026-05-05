@@ -1,10 +1,32 @@
-1. cd GroupChat then cd build
-2. In terminal 1 ./groupchat_server
-3. In terminal 2  cd GroupChat then cd build ./groupchat_client
-4. / join "chatroom number"
-5. send messages
-6. In terminal 3  cd GroupChat then cd build ./groupchat_client
-7. / join "chatroom number"
-8. send messages
-9. Sending audio is /audio ../sample/<file> Name
-10. Sending video is /audio ../sample/<file> Name
+1. Open a terminal in GroupChat.
+2. Configure and build:
+	cmake -S . -B build-local
+	cmake --build build-local --target groupchat_server groupchat_client bot_test
+3. Start server (terminal 1):
+	./build-local/groupchat_server
+4. Start client A (terminal 2):
+	./build-local/groupchat_client
+5. Start client B (terminal 3):
+	./build-local/groupchat_client
+6. In each client, join a group:
+	/join general
+7. Chat by typing normal messages.
+
+Media commands:
+8. Send audio:
+	/audio sample/<audio-file>
+9. Send video:
+	/video sample/<video-file>
+10. Play last received audio or a specific file:
+	/play
+	/play downloads/received_<file>
+
+Run bot feature test:
+11. Keep server running, then in another terminal run:
+	./build-local/bot_test
+
+Notes:
+- If /play is run in WSL, it opens the file with Windows media player.
+- If /play is run on native Linux, it uses the system default app via xdg-open.
+- In headless environments (like some Codespaces setups), audio playback may not open a player.
+- Path note: these commands assume you launched client from GroupChat (same folder that contains sample/).

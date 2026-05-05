@@ -1,3 +1,11 @@
 [2026-04-24 17:46:15] group=general sender=1 hello from botA
 [2026-04-24 17:46:15] group=general sender=2 hello from botB
 [2026-04-24 17:46:15] group=sports sender=3 hello from botC
+[2026-05-04 23:46:39] group=general sender=1 feature-msg-one
+[2026-05-04 23:46:42] group=general sender=1 feature-msg-after-leave
+[2026-05-04 23:47:08] group=general sender=4 feature-msg-one
+[2026-05-04 23:47:11] group=general sender=4 feature-msg-after-leave
+[2026-05-04 23:49:10] group=general sender=1 feature-msg-one
+[2026-05-04 23:49:12] group=general sender=1 feature-msg-after-leave
+[2026-05-04 23:59:59] group=general sender=1 pwd
+[2026-05-05 00:00:04] group=general sender=1 ls sample

@@ -51,16 +51,22 @@ arpa/inet.h
 -
 chrono
 -
+cstring
+-
 iostream
 -
 netinet/in.h
 -
 string
 -
+sys/select.h
+-
 sys/socket.h
 -
 thread
 -
 unistd.h
+-
+vector
 -
 
