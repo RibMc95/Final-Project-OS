@@ -1,0 +1,23 @@
+\BOOKMARK [1][-]{section.1}{Architecture Overview}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{System Summary}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Client-Server Design Diagram}{section.1}% 3
+\BOOKMARK [2][-]{subsection.1.3}{Server Thread Model \(Including Thread Pool\)}{section.1}% 4
+\BOOKMARK [2][-]{subsection.1.4}{Group and Message Flow Diagram}{section.1}% 5
+\BOOKMARK [1][-]{section.2}{Message Protocol Design}{}% 6
+\BOOKMARK [2][-]{subsection.2.1}{Existing Transport Frame}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.2}{Assignment Packet Format \(Required Fields\)}{section.2}% 8
+\BOOKMARK [2][-]{subsection.2.3}{Type Values}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.4}{Validation and Robustness Rules}{section.2}% 10
+\BOOKMARK [1][-]{section.3}{Cache Design}{}% 11
+\BOOKMARK [2][-]{subsection.3.1}{Cache Size and Eviction Policy}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.2}{Storage and Retrieval}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.3}{Synchronization Approach}{section.3}% 14
+\BOOKMARK [1][-]{section.4}{Scheduling Design}{}% 15
+\BOOKMARK [2][-]{subsection.4.1}{Strategy}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.2}{Task Dispatch Queue Diagram}{section.4}% 17
+\BOOKMARK [2][-]{subsection.4.3}{Dispatch Rules}{section.4}% 18
+\BOOKMARK [1][-]{section.5}{Extra Features Plan \(Optional\)}{}% 19
+\BOOKMARK [2][-]{subsection.5.1}{Audio/Video Simulation Plan}{section.5}% 20
+\BOOKMARK [2][-]{subsection.5.2}{Client Verification Logic Plan}{section.5}% 21
+\BOOKMARK [2][-]{subsection.5.3}{Security/Permissions Plan}{section.5}% 22
+\BOOKMARK [1][-]{section.6}{Summary}{}% 23
