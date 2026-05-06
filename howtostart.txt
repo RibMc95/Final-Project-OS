@@ -15,18 +15,28 @@
 Media commands:
 8. Send audio:
 	/audio sample/<audio-file>
+	Example: /audio sample/test.mp3
 9. Send video:
 	/video sample/<video-file>
+	Example: /video sample/test4.mp4
 10. Play last received audio or a specific file:
 	/play
 	/play downloads/received_<file>
+	Example: /play downloads/received_test.mp3
 
 Run bot feature test:
 11. Keep server running, then in another terminal run:
 	./build-local/bot_test
 
 Notes:
+- Join a group before sending audio or video:
+	/join general
 - If /play is run in WSL, it opens the file with Windows media player.
 - If /play is run on native Linux, it uses the system default app via xdg-open.
 - In headless environments (like some Codespaces setups), audio playback may not open a player.
 - Path note: these commands assume you launched client from GroupChat (same folder that contains sample/).
+- Video compatibility fix: on Linux/WSL, /video now converts files to a Windows-compatible MP4 before sending.
+- Install ffmpeg on Linux/WSL: sudo apt install -y ffmpeg
+- If only Isreal.mp4 gives an unsupported encoding error, convert it once:
+	ffmpeg -i sample/Isreal.mp4 -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k sample/Isreal_compat.mp4
+	Then send: /video sample/Isreal_compat.mp4

@@ -186,6 +186,7 @@ void ChatServer::relay_audio_begin(int client_fd, const std::string &filename)
     std::vector<int> targets = groups_.get_group_members_for_sender(client_fd);
     if (targets.empty())
     {
+        utils::send_server_text(client_fd, "ERROR Join a group before sending media: /join general");
         return;
     }
 
@@ -227,6 +228,7 @@ void ChatServer::relay_video_begin(int client_fd, const std::string &filename)
     std::vector<int> targets = groups_.get_group_members_for_sender(client_fd);
     if (targets.empty())
     {
+        utils::send_server_text(client_fd, "ERROR Join a group before sending media: /join general");
         return;
     }
 

@@ -9,3 +9,7 @@
 [2026-05-04 23:49:12] group=general sender=1 feature-msg-after-leave
 [2026-05-04 23:59:59] group=general sender=1 pwd
 [2026-05-05 00:00:04] group=general sender=1 ls sample
+[2026-05-05 21:02:30] group=general sender=1 feature-msg-one
+[2026-05-05 21:02:32] group=general sender=1 feature-msg-after-leave
+[2026-05-05 21:09:13] group=general sender=1 feature-msg-one
+[2026-05-05 21:09:15] group=general sender=1 feature-msg-after-leave

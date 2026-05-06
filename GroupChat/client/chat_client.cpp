@@ -88,28 +88,6 @@ namespace
 
         return lowered;
     }
-
-    bool is_audio_extension(const string &ext)
-    {
-        return ext == ".mp3" ||
-               ext == ".wav" ||
-               ext == ".wave" ||
-               ext == ".ogg" ||
-               ext == ".flac" ||
-               ext == ".m4a" ||
-               ext == ".aac";
-    }
-
-    bool is_video_extension(const string &ext)
-    {
-        return ext == ".mp4" ||
-               ext == ".mov" ||
-               ext == ".avi" ||
-               ext == ".mkv" ||
-               ext == ".webm" ||
-               ext == ".wmv" ||
-               ext == ".m4v";
-    }
 }
 
 ChatClient::ChatClient(string host, int port)
@@ -186,7 +164,7 @@ void ChatClient::run()
     cout << "  /leave\n";
     cout << "  /audio <file_path>\n";
     cout << "  /video <file_path>\n";
-    cout << "  /play [file_path]  (open the last sent/received audio/video or a local media file)\n";
+    cout << "  /play [file_path]  (play the last received audio or a local file)\n";
     cout << "  /quit\n\n";
 
     string line;
@@ -210,23 +188,9 @@ void ChatClient::run()
                 continue;
             }
 
-            if (!filesystem::exists(path))
-            {
-                cout << "ERROR: Audio file not found: " << path << endl;
-                continue;
-            }
-
             if (!send_audio_file(socket_fd_, path))
             {
                 cout << "ERROR: Could not send audio file.\n";
-            }
-            else
-            {
-                /*
-                    This makes /play work on the sender side too.
-                    Without this, /play only works on the receiver side.
-                */
-                last_media_name_ = path;
             }
 
             continue;
@@ -242,26 +206,9 @@ void ChatClient::run()
                 continue;
             }
 
-            if (!filesystem::exists(path))
-            {
-                cout << "ERROR: Video file not found: " << path << endl;
-                continue;
-            }
-
             if (!send_video_file(socket_fd_, path))
             {
                 cout << "ERROR: Could not send video file.\n";
-            }
-            else
-            {
-                /*
-                    This makes /play work immediately after you send a video.
-                    Example:
-                        /video test4.mp4
-                        /play
-                    Now /play opens test4.mp4 on the sender side.
-                */
-                last_media_name_ = path;
             }
 
             continue;
@@ -278,11 +225,11 @@ void ChatClient::run()
 
             if (path.empty())
             {
-                play_last_media();
+                play_received_audio();
             }
             else
             {
-                play_media_file(path);
+                play_audio_file(path);
             }
 
             continue;
@@ -392,13 +339,140 @@ void ChatClient::handle_audio_end()
 
     incoming_audio_.close();
 
-    /*
-        This makes plain /play open the most recently received audio.
-    */
-    last_media_name_ = incoming_audio_name_;
-
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
-    cout << "Type /play to open it, or /play <file_path> for another audio/video file." << endl;
+    cout << "Type /play to play it, or /play <file_path> for another audio file." << endl;
+}
+
+void ChatClient::play_received_audio() const
+{
+    if (incoming_audio_name_.empty())
+    {
+        cout << "No audio received yet." << endl;
+        cout << "Use /audio <file_path> from another client first, or use /play <file_path>." << endl;
+        return;
+    }
+
+    play_audio_file(incoming_audio_name_);
+}
+
+void ChatClient::play_audio_file(const string &path) const
+{
+    if (path.empty())
+    {
+        cout << "Usage: /play <file_path>" << endl;
+        return;
+    }
+
+    if (!filesystem::exists(path))
+    {
+        cout << "ERROR: Audio file not found: " << path << endl;
+        return;
+    }
+
+    if (!filesystem::is_regular_file(path))
+    {
+        cout << "ERROR: This path is not a regular audio file: " << path << endl;
+        return;
+    }
+
+    const string abs_path = filesystem::absolute(path).string();
+    const string ext = lowercase_extension(abs_path);
+
+#ifdef _WIN32
+    /*
+        Native Windows:
+        WAV files can be played directly with PlaySound.
+        MP3 and other audio files open in the default Windows media player.
+    */
+    if (ext == ".wav" || ext == ".wave")
+    {
+        if (PlaySoundA(abs_path.c_str(), NULL, SND_FILENAME | SND_ASYNC))
+        {
+            cout << "Playing WAV file: " << path << endl;
+        }
+        else
+        {
+            cout << "Playback failed for: " << path << ". Could not play WAV file." << endl;
+        }
+    }
+    else
+    {
+        const string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
+
+        if (system(open_cmd.c_str()) == 0)
+        {
+            cout << "Opened in Windows default media player: " << path << endl;
+        }
+        else
+        {
+            cout << "Playback failed for: " << path << ". Make sure a default media player is set in Windows." << endl;
+        }
+    }
+#else
+    const string quoted_path = quote_for_shell(abs_path);
+
+    // Linux / GitHub Codespaces / Ubuntu:
+    // Try terminal audio players first. ffplay and mpg123 handle MP3 well.
+    if (command_exists("ffplay"))
+    {
+        const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
+        cout << "Playing with ffplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    if (command_exists("mpg123"))
+    {
+        const string cmd = "mpg123 -q " + quoted_path;
+        cout << "Playing with mpg123: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    // paplay/aplay are useful for WAV files and systems with PulseAudio/ALSA configured.
+    if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
+    {
+        const string cmd = "paplay " + quoted_path;
+        cout << "Playing with paplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
+    {
+        const string cmd = "aplay -q " + quoted_path;
+        cout << "Playing with aplay: " << path << endl;
+        if (system(cmd.c_str()) == 0)
+        {
+            return;
+        }
+    }
+
+    // Desktop Linux fallback. This may not work in a headless Codespace, but helps locally.
+    if (command_exists("xdg-open"))
+    {
+        const string cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1 &";
+        if (system(cmd.c_str()) == 0)
+        {
+            cout << "Opened audio file with the default desktop app: " << path << endl;
+            return;
+        }
+    }
+
+    cout << "Playback failed for: " << path << "." << endl;
+    cout << "Install at least one terminal player in Ubuntu/Codespaces:" << endl;
+    cout << "  sudo apt update" << endl;
+    cout << "  sudo apt install -y ffmpeg mpg123 alsa-utils pulseaudio-utils" << endl;
+    cout << "Then try: /play " << path << endl;
+    cout << "Note: GitHub Codespaces is usually headless, so it may not have a real audio device." << endl;
+    cout << "If the player is installed but you still hear nothing, download the file from the downloads folder and play it on your computer." << endl;
+#endif
 }
 
 void ChatClient::handle_video_begin(const string &filename)
@@ -441,278 +515,5 @@ void ChatClient::handle_video_end()
 
     incoming_video_.close();
 
-    /*
-        This is the main fix for your issue.
-
-        After the receiver finishes saving:
-            downloads/received_test4.mp4
-
-        plain /play will open:
-            downloads/received_test4.mp4
-    */
-    last_media_name_ = incoming_video_name_;
-
     cout << "Video saved to: " << incoming_video_name_ << endl;
-    cout << "Type /play to open it, or /play <file_path> for another audio/video file." << endl;
-}
-
-void ChatClient::play_last_media() const
-{
-    if (last_media_name_.empty())
-    {
-        cout << "No audio or video has been sent or received yet." << endl;
-        cout << "Use /audio <file_path> or /video <file_path> first." << endl;
-        return;
-    }
-
-    play_media_file(last_media_name_);
-}
-
-void ChatClient::play_media_file(const string &path) const
-{
-    if (path.empty())
-    {
-        cout << "Usage: /play <file_path>" << endl;
-        return;
-    }
-
-    if (!filesystem::exists(path))
-    {
-        cout << "ERROR: Media file not found: " << path << endl;
-        return;
-    }
-
-    if (!filesystem::is_regular_file(path))
-    {
-        cout << "ERROR: This path is not a regular media file: " << path << endl;
-        return;
-    }
-
-    const string abs_path = filesystem::absolute(path).string();
-    const string ext = lowercase_extension(abs_path);
-
-    bool is_audio = is_audio_extension(ext);
-    bool is_video = is_video_extension(ext);
-
-    if (!is_audio && !is_video)
-    {
-        cout << "WARNING: Unknown media extension '" << ext << "'." << endl;
-        cout << "Trying to open it anyway: " << abs_path << endl;
-    }
-
-#ifdef _WIN32
-    /*
-        Native Windows:
-        WAV audio can be played directly with PlaySound.
-        MP3, MP4, MOV, AVI, and other files open in the default Windows app.
-    */
-    if (is_audio && (ext == ".wav" || ext == ".wave"))
-    {
-        if (PlaySoundA(abs_path.c_str(), NULL, SND_FILENAME | SND_ASYNC))
-        {
-            cout << "Playing WAV file: " << path << endl;
-        }
-        else
-        {
-            cout << "Playback failed for: " << path << ". Could not play WAV file." << endl;
-        }
-
-        return;
-    }
-
-    const string open_cmd = "cmd /C start \"\" " + quote_for_cmd(abs_path) + " >nul 2>&1";
-
-    if (system(open_cmd.c_str()) == 0)
-    {
-        if (is_video)
-        {
-            cout << "Opened video in Windows default media player: " << path << endl;
-        }
-        else if (is_audio)
-        {
-            cout << "Opened audio in Windows default media player: " << path << endl;
-        }
-        else
-        {
-            cout << "Opened file in Windows default app: " << path << endl;
-        }
-    }
-    else
-    {
-        cout << "Playback failed for: " << path << "." << endl;
-        cout << "Make sure Windows has a default app for this file type." << endl;
-    }
-#else
-    const string quoted_path = quote_for_shell(abs_path);
-
-    auto env_exists = [](const char *name) -> bool
-    {
-        const char *value = getenv(name);
-        return value != nullptr && string(value).size() > 0;
-    };
-
-    bool is_codespaces = env_exists("CODESPACES");
-    bool is_wsl = env_exists("WSL_DISTRO_NAME") || env_exists("WSL_INTEROP");
-    bool has_linux_audio_device = filesystem::exists("/dev/snd");
-
-    /*
-        GitHub Codespaces:
-        Codespaces usually has no audio device and no GUI video player.
-        So do not force ffplay/xdg-open. Instead, show where the file is saved.
-    */
-    if (is_codespaces)
-    {
-        cout << "Media file is ready:" << endl;
-        cout << "  " << abs_path << endl;
-        cout << endl;
-        cout << "This is a GitHub Codespace." << endl;
-        cout << "Codespaces usually cannot play audio/video directly from the terminal." << endl;
-        cout << "There is no Linux sound device such as /dev/snd, and there may be no GUI video player." << endl;
-        cout << endl;
-
-        if (command_exists("ffprobe"))
-        {
-            cout << "Checking media file information with ffprobe:" << endl;
-            string probe_cmd = "ffprobe -hide_banner " + quoted_path;
-            system(probe_cmd.c_str());
-            cout << endl;
-        }
-
-        cout << "To watch or hear it, download/open this file from VS Code Explorer:" << endl;
-        cout << "  " << abs_path << endl;
-        cout << endl;
-        cout << "Right-click the file, then choose Download." << endl;
-        return;
-    }
-
-    /*
-        WSL:
-        Open audio/video with the Windows default app.
-    */
-    if (is_wsl && command_exists("wslpath"))
-    {
-        string command =
-            "powershell.exe -NoProfile -Command \"Start-Process -FilePath \\\"$(wslpath -w " +
-            quoted_path +
-            ")\\\"\"";
-
-        cout << "Opening media file with the Windows default app:" << endl;
-        cout << "  " << abs_path << endl;
-
-        if (system(command.c_str()) == 0)
-        {
-            return;
-        }
-
-        cout << "Could not open the file with Windows default app." << endl;
-        cout << "You can still manually open this file:" << endl;
-        cout << "  " << abs_path << endl;
-        return;
-    }
-
-    /*
-        Normal Linux desktop:
-        For videos, xdg-open is usually best because it opens VLC, Videos, etc.
-        For audio, try terminal players first if there is an audio device.
-    */
-    if (is_video && command_exists("xdg-open"))
-    {
-        const string cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1 &";
-
-        if (system(cmd.c_str()) == 0)
-        {
-            cout << "Opened video with the default Linux app:" << endl;
-            cout << "  " << abs_path << endl;
-            return;
-        }
-    }
-
-    if (is_audio && has_linux_audio_device)
-    {
-        if (command_exists("ffplay"))
-        {
-            const string cmd = "ffplay -nodisp -autoexit -loglevel error " + quoted_path;
-            cout << "Playing audio with ffplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if (command_exists("mpg123"))
-        {
-            const string cmd = "mpg123 -q " + quoted_path;
-            cout << "Playing audio with mpg123: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if ((ext == ".wav" || ext == ".wave") && command_exists("paplay"))
-        {
-            const string cmd = "paplay " + quoted_path;
-            cout << "Playing audio with paplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-
-        if ((ext == ".wav" || ext == ".wave") && command_exists("aplay"))
-        {
-            const string cmd = "aplay -q " + quoted_path;
-            cout << "Playing audio with aplay: " << path << endl;
-
-            if (system(cmd.c_str()) == 0)
-            {
-                return;
-            }
-        }
-    }
-
-    /*
-        Linux fallback:
-        Try xdg-open for any media file if available.
-    */
-    if (command_exists("xdg-open"))
-    {
-        const string cmd = "xdg-open " + quoted_path + " >/dev/null 2>&1 &";
-
-        if (system(cmd.c_str()) == 0)
-        {
-            cout << "Opened media file with the default Linux app:" << endl;
-            cout << "  " << abs_path << endl;
-            return;
-        }
-    }
-
-    /*
-        Final fallback:
-        The transfer still worked; this machine just cannot open/play it.
-    */
-    cout << "Media file is ready, but this terminal cannot open/play it directly." << endl;
-    cout << "Saved file:" << endl;
-    cout << "  " << abs_path << endl;
-    cout << endl;
-
-    if (is_audio && !has_linux_audio_device)
-    {
-        cout << "Reason: Linux cannot find an audio device such as /dev/snd." << endl;
-    }
-    else if (is_video)
-    {
-        cout << "Reason: Linux could not find a GUI/default video player." << endl;
-    }
-    else
-    {
-        cout << "Reason: No suitable media opener/player was found." << endl;
-    }
-
-    cout << "Download or open the file locally to hear/watch it." << endl;
-    return;
-#endif
 }

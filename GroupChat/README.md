@@ -49,13 +49,13 @@ GroupChat/
   - `sjf` = Shortest Job First based on message length
 - Clients can send audio files with `/audio <file_path>`.
 - Clients can send video files with `/video <file_path>`.
-- Clients can play the last received audio with `/play` or play a local audio file from the terminal with `/play <file_path>`.
+- Clients can open the last sent/received media with `/play` or open a specific local media file with `/play <file_path>`.
 
 ## Build
 
 ```bash
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build-local
+cmake --build build-local --target groupchat_server groupchat_client bot_test
 ```
 
 ## Run
@@ -63,48 +63,69 @@ cmake --build build
 Terminal 1:
 
 ```bash
-./build/groupchat_server 5555 rr
-```
-
-or:
-
-```bash
-./build/groupchat_server 5555 sjf
+./build-local/groupchat_server
 ```
 
 Terminal 2:
 
 ```bash
-./build/groupchat_client 127.0.0.1 5555
+./build-local/groupchat_client
 ```
 
 Terminal 3:
 
 ```bash
-./build/groupchat_client 127.0.0.1 5555
+./build-local/groupchat_client
 ```
 
-## Audio Backend Setup (Linux/WSL)
-
-The `/play` command needs at least one terminal audio backend installed.
-
-Ubuntu/WSL install (run in terminal):
+## Quick Start
 
 ```bash
-sudo apt update
-sudo apt install -y ffmpeg alsa-utils pulseaudio-utils mpg123
+/join general
 ```
 
-Quick check (any one path shown means playback backend is available):
+Join a group before sending audio or video. If you do not join first, the server will reject the media transfer.
+
+## Media Commands
+
+```text
+/audio sample/test.mp3
+/video sample/test4.mp4
+/play
+/play downloads/received_test.mp3
+/play downloads/received_test4_compat.mp4
+```
+
+These sample paths assume you launched the client from the `GroupChat` folder.
+
+## Playback Behavior
+
+- On Windows, `/play` opens the file with the default Windows app.
+- On WSL, `/play` opens the file with the Windows default app.
+- On native Linux, `/play` uses `xdg-open` to open the default Linux app.
+- In headless environments such as some Codespaces setups, the media file may save correctly but not open directly.
+
+## Video Compatibility (Linux/WSL)
+
+On Linux/WSL, `/video` converts outgoing video to a Windows Media Player compatible MP4 before sending.
+
+Install `ffmpeg` once:
 
 ```bash
-command -v ffplay || true
-command -v aplay || true
-command -v paplay || true
-command -v mpg123 || true
+sudo apt install -y ffmpeg
 ```
 
-If none are found, `/play` will fail with an audio backend message.
+If `Isreal.mp4` is the only file that still shows an unsupported encoding error in Windows Media Player, convert it once manually:
+
+```bash
+ffmpeg -i sample/Isreal.mp4 -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k sample/Isreal_compat.mp4
+```
+
+Then send:
+
+```text
+/video sample/Isreal_compat.mp4
+```
 
 ## Client Commands
 
@@ -112,23 +133,22 @@ If none are found, `/play` will fail with an audio backend message.
 /join general
 /list
 /leave
-/audio path/to/file.wav
-/video path/to/file.mp4
+/audio sample/test.mp3
+/video sample/test4.mp4
 /play
-/play path/to/file.wav
+/play downloads/received_test.mp3
+/play downloads/received_test4_compat.mp4
 /quit
 ```
 
 Any other text is treated as a group message.
-
-On Windows, `/play` uses `PlaySoundA` for WAV files and opens the default Windows media player for other formats (such as MP3). On WSL, `/play` first tries opening in Windows media player, then falls back to terminal audio players (`ffplay`, `mpg123`, `paplay`, `aplay`). On native Linux, it tries those terminal players directly.
 
 ## Test Harness
 
 Start the server first, then run:
 
 ```bash
-./build/bot_test
+./build-local/bot_test
 ```
 
 ## OS Concepts to Explain
