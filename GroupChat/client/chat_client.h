@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <filesystem>
 #include <fstream>
 #include <string>
 #include <thread>
@@ -29,8 +28,18 @@ private:
     std::ofstream incoming_video_;
     std::string incoming_video_name_;
 
-    // Tracks whichever media file was received most recently.
-    std::string last_received_media_name_;
+    /*
+        Stores the most recent media file that this client can play/open.
+
+        This is updated when:
+        - this client sends audio with /audio
+        - this client sends video with /video
+        - this client receives audio and the transfer finishes
+        - this client receives video and the transfer finishes
+
+        This is what makes plain /play work.
+    */
+    std::string last_media_name_;
 
     void receive_loop();
 
@@ -44,6 +53,6 @@ private:
     void handle_video_chunk(const std::vector<char> &chunk);
     void handle_video_end();
 
-    void play_last_received_media() const;
+    void play_last_media() const;
     void play_media_file(const std::string &path) const;
 };

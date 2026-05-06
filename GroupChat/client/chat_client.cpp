@@ -186,7 +186,7 @@ void ChatClient::run()
     cout << "  /leave\n";
     cout << "  /audio <file_path>\n";
     cout << "  /video <file_path>\n";
-    cout << "  /play [file_path]  (open the last received audio/video or a local media file)\n";
+    cout << "  /play [file_path]  (open the last sent/received audio/video or a local media file)\n";
     cout << "  /quit\n\n";
 
     string line;
@@ -210,9 +210,23 @@ void ChatClient::run()
                 continue;
             }
 
+            if (!filesystem::exists(path))
+            {
+                cout << "ERROR: Audio file not found: " << path << endl;
+                continue;
+            }
+
             if (!send_audio_file(socket_fd_, path))
             {
                 cout << "ERROR: Could not send audio file.\n";
+            }
+            else
+            {
+                /*
+                    This makes /play work on the sender side too.
+                    Without this, /play only works on the receiver side.
+                */
+                last_media_name_ = path;
             }
 
             continue;
@@ -228,9 +242,26 @@ void ChatClient::run()
                 continue;
             }
 
+            if (!filesystem::exists(path))
+            {
+                cout << "ERROR: Video file not found: " << path << endl;
+                continue;
+            }
+
             if (!send_video_file(socket_fd_, path))
             {
                 cout << "ERROR: Could not send video file.\n";
+            }
+            else
+            {
+                /*
+                    This makes /play work immediately after you send a video.
+                    Example:
+                        /video test4.mp4
+                        /play
+                    Now /play opens test4.mp4 on the sender side.
+                */
+                last_media_name_ = path;
             }
 
             continue;
@@ -247,7 +278,7 @@ void ChatClient::run()
 
             if (path.empty())
             {
-                play_last_received_media();
+                play_last_media();
             }
             else
             {
@@ -361,7 +392,10 @@ void ChatClient::handle_audio_end()
 
     incoming_audio_.close();
 
-    last_received_media_name_ = incoming_audio_name_;
+    /*
+        This makes plain /play open the most recently received audio.
+    */
+    last_media_name_ = incoming_audio_name_;
 
     cout << "Audio saved to: " << incoming_audio_name_ << endl;
     cout << "Type /play to open it, or /play <file_path> for another audio/video file." << endl;
@@ -407,22 +441,31 @@ void ChatClient::handle_video_end()
 
     incoming_video_.close();
 
-    last_received_media_name_ = incoming_video_name_;
+    /*
+        This is the main fix for your issue.
+
+        After the receiver finishes saving:
+            downloads/received_test4.mp4
+
+        plain /play will open:
+            downloads/received_test4.mp4
+    */
+    last_media_name_ = incoming_video_name_;
 
     cout << "Video saved to: " << incoming_video_name_ << endl;
     cout << "Type /play to open it, or /play <file_path> for another audio/video file." << endl;
 }
 
-void ChatClient::play_last_received_media() const
+void ChatClient::play_last_media() const
 {
-    if (last_received_media_name_.empty())
+    if (last_media_name_.empty())
     {
-        cout << "No audio or video received yet." << endl;
-        cout << "Use /audio <file_path> or /video <file_path> from another client first." << endl;
+        cout << "No audio or video has been sent or received yet." << endl;
+        cout << "Use /audio <file_path> or /video <file_path> first." << endl;
         return;
     }
 
-    play_media_file(last_received_media_name_);
+    play_media_file(last_media_name_);
 }
 
 void ChatClient::play_media_file(const string &path) const
@@ -519,7 +562,7 @@ void ChatClient::play_media_file(const string &path) const
     */
     if (is_codespaces)
     {
-        cout << "Media file was received successfully:" << endl;
+        cout << "Media file is ready:" << endl;
         cout << "  " << abs_path << endl;
         cout << endl;
         cout << "This is a GitHub Codespace." << endl;
@@ -651,7 +694,7 @@ void ChatClient::play_media_file(const string &path) const
         Final fallback:
         The transfer still worked; this machine just cannot open/play it.
     */
-    cout << "Media file was received successfully, but this terminal cannot open/play it directly." << endl;
+    cout << "Media file is ready, but this terminal cannot open/play it directly." << endl;
     cout << "Saved file:" << endl;
     cout << "  " << abs_path << endl;
     cout << endl;
