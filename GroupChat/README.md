@@ -41,6 +41,53 @@ GroupChat/
 - Clients can join or create a group using `/join groupName`.
 - Messages are broadcast to everyone in the same group.
 - Messages include timestamp, sender ID, and group name.
+
+# GroupChat Simplified
+
+This is a simplified C++ Group Chat System for CSC-375 Operating Systems.
+The goal is to keep the project easy to compile, explain, and defend while still showing the required OS ideas.
+
+Design document for submission: see [DESIGN_DOCUMENT.md](DESIGN_DOCUMENT.md).
+
+## Folder Layout
+
+```text
+GroupChat/
+├── client/
+│   ├── main.cpp
+│   ├── chat_client.cpp
+│   ├── chat_client.h
+│   ├── audio_client.cpp
+│   └── video_client.cpp
+├── server/
+│   ├── main.cpp
+│   ├── chat_server.cpp
+│   ├── chat_server.h
+│   ├── group_manager.cpp
+│   ├── group_manager.h
+│   ├── cache.cpp
+│   ├── thread_pool.cpp
+│   └── thread_pool.h
+├── shared/
+│   ├── protocol.h
+│   ├── cache.h
+│   └── utils.h
+├── tests/
+│   └── bot_test.cpp
+├── logs/
+│   └── chat_log.txt
+├── diagrams/
+├── README.md
+├── DESIGN_DOCUMENT.md
+└── CMakeLists.txt
+```
+
+## What Works
+
+- Clients connect to one server over TCP.
+- Clients can join or create a group using `/join groupName`.
+- Messages are broadcast to everyone in the same group.
+- Messages include timestamp, sender ID, and group name.
 - Clients can switch groups by running `/join anotherGroup`.
 - Clients can list active groups using `/list`.
 - Each group has recent message history using a fixed-size circular cache.
